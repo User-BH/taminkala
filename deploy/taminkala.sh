@@ -18,6 +18,15 @@
 # ==========================================================
 set -Eeuo pipefail
 
+# اجرا از روی یک کپی موقت: به‌روزرسانی خود این فایل را عوض می‌کند و bash
+# اسکریپت در حال اجرا را خط‌به‌خط می‌خواند؛ پس نباید از فایل اصلی اجرا شود.
+if [[ -z ${TKB_RUNNING_COPY:-} ]]; then
+  _tmp=$(mktemp /tmp/taminkala.XXXXXX.sh)
+  cp "$(readlink -f "$0")" "$_tmp"
+  TKB_RUNNING_COPY=$_tmp exec bash "$_tmp" "$@"
+fi
+trap 'rm -f "$TKB_RUNNING_COPY"' EXIT
+
 CONF_DIR=/etc/taminkala
 CONF_FILE=$CONF_DIR/taminkala.env
 BACKUP_DIR=$CONF_DIR/backups
@@ -171,7 +180,7 @@ reload_nginx() {
     systemctl enable --quiet nginx 2>/dev/null || true
     if systemctl is-active --quiet nginx; then systemctl reload nginx; else systemctl start nginx; fi
   else
-    if [[ -s /run/nginx.pid ]] && kill -0 "$(cat /run/nginx.pid)" 2>/dev/null; then nginx -s reload; else nginx; fi
+    if [[ -s /run/nginx.pid ]] && kill -0 "$(cat /run/nginx.pid)" 2>/dev/null; then nginx -s reload 2>/dev/null; else nginx; fi
   fi
 }
 
@@ -265,6 +274,14 @@ cmd_update() {
     say "تغییرات این به‌روزرسانی:"
     git_safe log --oneline "$before..$after" 2>/dev/null | sed 's/^/    /' || true
   fi
+  # ادامه کار با نسخه جدید همین اسکریپت (ممکن است در به‌روزرسانی تغییر کرده باشد)
+  rm -f "$TKB_RUNNING_COPY"
+  exec env -u TKB_RUNNING_COPY bash "$APP_DIR/deploy/taminkala.sh" _after_update
+}
+
+cmd_after_update() {
+  need_root update
+  load_conf
   apply_nginx
   install_cmd
   health
@@ -284,16 +301,16 @@ cmd_rollback() {
 cmd_status() {
   load_conf
   line; printf '%s\n' "${W}  وضعیت تأمین کالا باختر${N}"
-  printf '  %-22s %s\n' "نسخه سایت:" "$(current_commit) ($BRANCH)" \
-                       "آخرین تغییر:" "$(git_safe log -1 --format='%cd — %s' --date=format:'%Y-%m-%d %H:%M' 2>/dev/null || echo -)" \
-                       "پوشه سایت:" "$APP_DIR" \
-                       "سایت اصلی:" "پورت $SITE_PORT" \
-                       "پیچک:" "پورت $PICHAK_PORT → $PICHAK_UPSTREAM" \
-                       "بیمه و حواله:" "پورت $BIME_PORT ← $BIME_ROOT"
+  printf '  • %s %s\n' "نسخه سایت:" "$(current_commit) ($BRANCH)" \
+                     "آخرین تغییر:" "$(git_safe log -1 --format='%cd — %s' --date=format:'%Y-%m-%d %H:%M' 2>/dev/null || echo -)" \
+                     "پوشه سایت:" "$APP_DIR" \
+                     "سایت اصلی:" "پورت $SITE_PORT" \
+                     "پیچک:" "پورت $PICHAK_PORT → $PICHAK_UPSTREAM" \
+                     "بیمه و حواله:" "پورت $BIME_PORT ← $BIME_ROOT"
   if [[ -d /run/systemd/system ]]; then
-    printf '  %-22s %s\n' "Nginx:" "$(systemctl is-active nginx 2>/dev/null || true)"
+    printf '  • %s %s\n' "Nginx:" "$(systemctl is-active nginx 2>/dev/null || true)"
     local u; for u in $(systemctl list-units --all --plain --no-legend '*pichak*' 2>/dev/null | awk '{print $1}'); do
-      printf '  %-22s %s\n' "$u:" "$(systemctl is-active "$u" 2>/dev/null || true)"
+      printf '  • %s %s\n' "$u:" "$(systemctl is-active "$u" 2>/dev/null || true)"
     done
   fi
   health
@@ -353,6 +370,7 @@ case ${1:-} in
   status)   cmd_status ;;
   rollback) cmd_rollback ;;
   settings) cmd_settings ;;
+  _after_update) cmd_after_update ;;
   help|-h|--help) cmd_help ;;
   "") menu ;;
   *) cmd_help; exit 1 ;;
