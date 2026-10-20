@@ -1,0 +1,18 @@
+# تنظیمات مشترک هر سه سرویس — ساخته‌شده توسط taminkala.sh → /etc/nginx/snippets/taminkala-common.conf
+
+# صفحه ۴۰۴ با قالب تأمین کالا باختر
+error_page 404 /404.html;
+location = /404.html {
+    root {{SITE_ROOT}};
+    internal;
+}
+
+# فایل‌های مخفی (.git, .env و ...) هرگز سرو نشوند
+location ~ /\. { return 404; }
+
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+gzip on;
+gzip_types text/css application/javascript application/json image/svg+xml;
