@@ -341,6 +341,18 @@ cmd_settings() {
   health
 }
 
+cmd_pichak_ocr() {
+  need_root pichak-ocr
+  load_conf
+  PICHAK_UPSTREAM=$PICHAK_UPSTREAM bash "$APP_DIR/deploy/pichak-ocr-install.sh" ${1:+"$1"}
+}
+
+cmd_doctor() {
+  need_root doctor
+  load_conf
+  bash "$APP_DIR/deploy/pichak-doctor.sh"
+}
+
 cmd_help() {
   cat <<EOF
 ${W}استفاده:${N}  sudo taminkala [دستور]
@@ -350,6 +362,8 @@ ${W}استفاده:${N}  sudo taminkala [دستور]
   status     نمایش وضعیت و بررسی سلامت سرویس‌ها
   rollback   برگشت به نسخه قبل از آخرین به‌روزرسانی
   settings   تغییر پورت‌ها، دامنه و مسیرها
+  pichak-ocr نصب OCR جدید کپچای پیچک  (pichak-ocr rollback = برگشت)
+  doctor     عیب‌یابی پیچک و جمع‌آوری نمونه کپچا
   help       همین راهنما
 
 بدون دستور، منوی ساده نمایش داده می‌شود.
@@ -368,6 +382,8 @@ menu() {
   3) وضعیت و بررسی سلامت
   4) برگشت به نسخه قبل
   5) تغییر تنظیمات (پورت‌ها / دامنه)
+  6) نصب / به‌روزرسانی OCR پیچک
+  7) عیب‌یابی پیچک
   0) خروج
 EOF
   [[ -n $TTY ]] || { cmd_help; exit 1; }
@@ -375,7 +391,10 @@ EOF
   case $c in
     1) cmd_install ;; 2) cmd_update ;; 3) cmd_status ;;
     4) if confirm "مطمئن هستید؟"; then cmd_rollback; fi ;;
-    5) cmd_settings ;; *) exit 0 ;;
+    5) cmd_settings ;;
+    6) cmd_pichak_ocr ;;
+    7) cmd_doctor ;;
+    *) exit 0 ;;
   esac
 }
 
@@ -386,6 +405,8 @@ case ${1:-} in
   rollback) cmd_rollback ;;
   settings) cmd_settings ;;
   _after_update) cmd_after_update ;;
+  pichak-ocr) cmd_pichak_ocr "${2:-}" ;;
+  doctor)   cmd_doctor ;;
   help|-h|--help) cmd_help ;;
   "") menu ;;
   *) cmd_help; exit 1 ;;
