@@ -55,6 +55,9 @@
 #viewerPanel .manualbox,#viewerPanel>.table-tools{margin-left:23px;margin-right:23px}
 #viewerPanel>details{margin:16px 23px 20px}
 .pagefoot{text-align:center;margin:26px 0}
+.rowact{margin-top:6px}
+.leaversel{border:1px solid #dedfe3;border-radius:8px;padding:4px 8px;font-size:12px;background:#fff}
+tr.dim td{opacity:.55}
 @media(max-width:1000px){.grid4{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){
   .stepper{gap:6px}
@@ -93,6 +96,8 @@
 <details class="help"><summary>راهنما</summary><div class="helpbody">
 <p><b>اکسل حقوق:</b> نام افراد، روزهای کارکرد، مزد، مزایا، مأخذ بیمه و سهم بیمه کارگر؛ مبالغ فقط از شیت انتخاب‌شده گرفته می‌شوند.</p>
 <p><b>بانک پرسنل:</b> فرد جدید را یک‌بار به این اکسل اضافه کنید؛ برای افراد خارج‌شده «وضعیت پرسنل» را غیرفعال بگذارید. افراد غیرفعال و افرادی که در لیست حقوق نیستند وارد خروجی نمی‌شوند.</p>
+<p><b>نام‌های متفاوت:</b> اگر نامی در دو فایل کمی فرق داشته باشد (مثلاً «زاده» جا افتاده)، سامانه نزدیک‌ترین نام را پیشنهاد می‌دهد؛ با تأیید شما در همین مرورگر به خاطر سپرده می‌شود و نام بانک پرسنل در فایل بیمه درج می‌شود.</p>
+<p><b>ترک کار:</b> کسی که در بانک پرسنل «تاریخ ترک کار» در ماه همین لیست دارد، با ۰ روز اعلام می‌شود؛ مشخص کنید در کدام لیست است. با افزودن ستون اختیاری «لیست بیمه» (مثلاً «اصلی» یا «پیمان») به بانک پرسنل، این انتخاب خودکار می‌شود.</p>
 <p><b>امنیت:</b> همه اطلاعات در مرورگر همین کامپیوتر پردازش می‌شود و به سرور ارسال نمی‌شود. انکودینگ، ترتیب ۲۹ ستون و ساختار DBF مطابق نمونه رسمی ثابت است.</p>
 </div></details>
 <div class="stepnav"><span class="tiny" id="s1hint">هر دو فایل را انتخاب کنید.</span><button type="button" class="btn" data-go="2" id="next1" disabled>مرحله بعد</button></div>
@@ -101,7 +106,7 @@
 <div class="step" data-step="2" hidden>
 <section class="panel"><div class="panel-head"><h2>مشخصات ماه و کارگاه</h2><span class="status green">سال و ماه از اکسل حقوق خوانده می‌شود</span></div>
 <div class="grid4">
-<div class="field"><label for="workshop">کد ۱۰ رقمی کارگاه</label><input id="workshop" dir="ltr" maxlength="10" inputmode="numeric" value="2456160180"></div>
+<div class="field"><label for="workshop">کد ۱۰ رقمی کارگاه</label><input id="workshop" dir="ltr" maxlength="10" inputmode="numeric" value="2826160012"></div>
 <div class="field"><label for="listno">شماره لیست</label><input id="listno" dir="ltr" maxlength="12" value="01"></div>
 <div class="field"><label for="year">سال شمسی</label><input id="year" dir="ltr" maxlength="4" inputmode="numeric" value="1405"></div>
 <div class="field"><label for="month">ماه لیست</label><select id="month"><option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option><option value="4">تیر</option><option value="5">مرداد</option><option value="6" selected>شهریور</option><option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option><option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option></select></div>
@@ -255,7 +260,7 @@ function nonempty(s){return String(s??'').trim()!==''}
 function readMasterRows(book){const s=book.find(x=>norm(x.name)===norm('پرسنل'));if(!s)throw Error('در فایل انتخابی شیتی به نام «پرسنل» وجود ندارد. لطفاً از قالب بانک پرسنل استفاده کنید.');
  if(!s.rows.length)throw Error('شیت «پرسنل» خالی است.');
  const probe=keyObj(s.rows[0]);for(const key of ['نام','نام خانوادگی','شماره بیمه','کد ملی','وضعیت پرسنل'])if(!probe.has(norm(key)))throw Error('ستون «'+key+'» در اکسل پرسنل پیدا نشد.');
- return s.rows.map((src,rowIndex)=>{const data=keyObj(src);const get=k=>String(pick(data,k)??'').trim();const row={_row:rowIndex+2,_status:get('وضعیت پرسنل'),_comments:get('توضیحات')};for(const [label,id] of MASTER_FIELDS){if(id)row[id]=get(label)}row.DSW_ID1=codeOf(row.DSW_ID1);row.PER_NATCOD=codeOf(row.PER_NATCOD);row.DSW_JOB=digits(row.DSW_JOB).toUpperCase().replace(/\s/g,'');row.DSW_SEX=row.DSW_SEX.includes('خانم')?'زن':row.DSW_SEX.includes('آقا')?'مرد':row.DSW_SEX;return row}).filter(r=>nonempty(nameOf(r).trim())||nonempty(r.DSW_ID1)||nonempty(r.PER_NATCOD))}
+ return s.rows.map((src,rowIndex)=>{const data=keyObj(src);const get=k=>String(pick(data,k)??'').trim();const row={_row:rowIndex+2,_status:get('وضعیت پرسنل'),_comments:get('توضیحات'),_list:get('لیست بیمه')};for(const [label,id] of MASTER_FIELDS){if(id)row[id]=get(label)}row.DSW_ID1=codeOf(row.DSW_ID1);row.PER_NATCOD=codeOf(row.PER_NATCOD);row.DSW_JOB=digits(row.DSW_JOB).toUpperCase().replace(/\s/g,'');row.DSW_SEX=row.DSW_SEX.includes('خانم')?'زن':row.DSW_SEX.includes('آقا')?'مرد':row.DSW_SEX;return row}).filter(r=>nonempty(nameOf(r).trim())||nonempty(r.DSW_ID1)||nonempty(r.PER_NATCOD))}
 function extractPayRows(){if(!work)return[];const s=work.find(s=>s.name===$('sheetSelect').value);if(!s)return[];const output=[];for(let i=0;i<s.rows.length;i++){
  const data=keyObj(s.rows[i]);const full=String(pick(data,'نام ونام خانوادگي','نام و نام خانوادگی','نام و نام خانوادگي')||'').trim().replace(/\s+/g,' ');
  if(!full||/جمع کل|جمع پرسنل/.test(full))continue;
@@ -282,23 +287,17 @@ function extractPayRows(){if(!work)return[];const s=work.find(s=>s.name===$('she
 function addToIndex(map,key,row){if(!key)return;let list=map.get(key);if(!list){list=[];map.set(key,list)}list.push(row)}
 function validNational(s){s=codeOf(s);if(!/^\d{10}$/.test(s)||/^(\d)\1{9}$/.test(s))return false;let sum=0;for(let i=0;i<9;i++)sum+=Number(s[i])*(10-i);const mod=sum%11;return Number(s[9])===(mod<2?mod:11-mod)}
 function syncData(){for(const entry of linkRows){const r=entry.combined;if(!r)continue;r.DSW_ID=codeOf($('workshop').value);r.DSW_YY=number($('year').value)%100;r.DSW_MM=number($('month').value);r.DSW_LISTNO=digits($('listno').value).trim();}}
-function buildMatch(){payrollData=extractPayRows();linkRows=[];const masterByName=new Map(),masterByNat=new Map(),masterByIns=new Map();
- for(const m of masterRows){addToIndex(masterByName,norm(nameOf(m)),m);addToIndex(masterByNat,codeOf(m.PER_NATCOD),m);addToIndex(masterByIns,codeOf(m.DSW_ID1),m)}
- const seenMaster=new Map(),seenPay=new Map();for(const p of payrollData)addToIndex(seenPay,norm(p._sourceName),p);
- for(const p of payrollData){const err=[...p._errors],warn=[...p._warnings];let matches=[],matchBy='';
- // Never silently choose among duplicate persons.
- if(p._national){matches=masterByNat.get(p._national)||[];matchBy='کد ملی'}
- if(!matches.length&&p._insurance){matches=masterByIns.get(p._insurance)||[];matchBy='شماره بیمه'}
- if(!matches.length){matches=masterByName.get(norm(p._sourceName))||[];matchBy='نام کامل'}
- const m=matches.length===1?matches[0]:null;
- if(!matches.length)err.push('در بانک پرسنل پیدا نشد؛ ابتدا این فرد را در اکسل پرسنل ثبت کنید');
- if(matches.length>1)err.push('تطبیق مبهم است: چند نفر با مشخصات یکسان در بانک وجود دارند');
- if(seenPay.get(norm(p._sourceName)).length>1)err.push('نام کامل در لیست حقوق تکراری است و نیازمند بررسی است');
- if(m){seenMaster.set(m,(seenMaster.get(m)||0)+1);
-  if(norm(m._status)!==norm('فعال'))err.push('این فرد در بانک پرسنل «فعال» نیست');
-  if(norm(nameOf(m))!==norm(p._sourceName))err.push('نام ثبت‌شده در دو اکسل یکسان نیست ('+nameOf(m)+' / '+p._sourceName+')');
-  if(p._national&&codeOf(m.PER_NATCOD)!==p._national)err.push('کد ملی دو اکسل متفاوت است');
-  if(p._insurance&&codeOf(m.DSW_ID1)!==p._insurance)err.push('شماره بیمه دو اکسل متفاوت است');
+// ---- تطبیق: پیشنهاد نام نزدیک، تأیید دستی، و ترک‌کارکرده‌های همان ماه (طراحی و توسعه: شرکت رهوار پیوند داده) ----
+const ALIAS_KEY='bime-name-aliases';
+let nameAliases=(()=>{try{return JSON.parse(localStorage.getItem(ALIAS_KEY)||'{}')||{}}catch(e){return {}}})();
+function saveAliases(){try{localStorage.setItem(ALIAS_KEY,JSON.stringify(nameAliases))}catch(e){}}
+let leaverRows=[];const leaverChoice=new Map();
+function editDistance(a,b){const prev=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let diag=prev[0];prev[0]=i;for(let j=1;j<=b.length;j++){const tmp=prev[j];prev[j]=Math.min(prev[j]+1,prev[j-1]+1,diag+(a[i-1]===b[j-1]?0:1));diag=tmp}}return prev[b.length]}
+function similarity(a,b){a=norm(a);b=norm(b);if(!a||!b)return 0;return 1-editDistance(a,b)/Math.max(a.length,b.length)}
+function ymOf(s){const d=codeOf(s);if(d.length===8)return [Number(d.slice(0,4)),Number(d.slice(4,6))];if(d.length===6){const yy=Number(d.slice(0,2));return [(yy<70?1400:1300)+yy,Number(d.slice(2,4))]}return null}
+function leftInListMonth(m){const ym=ymOf(m.DSW_EDATE);return !!ym&&ym[0]===number($('year').value)&&ym[1]===number($('month').value)}
+function listColumnSays(m){const v=norm(m._list||'');if(!v)return null;const isP=x=>x.includes(norm('پیمان'));return isP(v)===isP(norm($('sheetSelect').value))}
+function masterChecks(m,err,warn){
   if(!/^\d{8}$/.test(codeOf(m.DSW_ID1)))err.push('شماره بیمه باید ۸ رقم باشد');
   if(!validNational(m.PER_NATCOD))err.push('کد ملی معتبر نیست (۱۰ رقم و رقم کنترل)');
   if(!nonempty(m.DSW_FNAME)||!nonempty(m.DSW_LNAME))err.push('نام و نام خانوادگی ناقص است');
@@ -307,34 +306,83 @@ function buildMatch(){payrollData=extractPayRows();linkRows=[];const masterByNam
   if(!/^[A-Za-z0-9]{6}$/.test(m.DSW_JOB))err.push('کد شغل بیمه باید ۶ حرف/رقم باشد');
   if(!nonempty(m.DSW_OCP))err.push('عنوان شغل در بانک پرسنل درج نشده است');
   for(const [k,label] of [['DSW_BDATE','تاریخ تولد'],['DSW_SDATE','تاریخ شروع به کار'],['DSW_IDPLC','محل صدور شناسنامه']])if(!nonempty(m[k]))warn.push(label+' در اکسل پرسنل خالی است');
- }
- const combined=m?{...m,...p,_sourceName:p._sourceName,_matchedBy:matchBy}:null;
- if(combined){combined.DSW_ID=codeOf($('workshop').value);combined.DSW_YY=number($('year').value)%100;combined.DSW_MM=number($('month').value);combined.DSW_LISTNO=digits($('listno').value);for(const key of SCHEMA.map(x=>x.name)){if(combined[key]===undefined)combined[key]=''}
+}
+function fillCombined(m,p,matchBy,err){const combined={...m,...p,_sourceName:p._sourceName,_matchedBy:matchBy};
+  combined.DSW_ID=codeOf($('workshop').value);combined.DSW_YY=number($('year').value)%100;combined.DSW_MM=number($('month').value);combined.DSW_LISTNO=digits($('listno').value);
+  for(const key of SCHEMA.map(x=>x.name)){if(combined[key]===undefined)combined[key]=''}
   for(const f of SCHEMA){try{fieldBytes(f,combined[f.name])}catch(e){err.push(e.message)}}
+  return combined}
+function findMaster(p,idx){let matches=[],by='';
+  if(p._national){matches=idx.nat.get(p._national)||[];by='کد ملی'}
+  if(!matches.length&&p._insurance){matches=idx.ins.get(p._insurance)||[];by='شماره بیمه'}
+  if(!matches.length){matches=idx.name.get(norm(p._sourceName))||[];by='نام کامل'}
+  if(!matches.length){const a=nameAliases[norm(p._sourceName)];if(a){matches=(a.startsWith('name:')?idx.name.get(a.slice(5)):idx.nat.get(a))||[];by='تأیید دستی نام'}}
+  return [matches,by]}
+function buildMatch(){payrollData=extractPayRows();linkRows=[];leaverRows=[];
+ const idx={name:new Map(),nat:new Map(),ins:new Map()};
+ for(const m of masterRows){addToIndex(idx.name,norm(nameOf(m)),m);addToIndex(idx.nat,codeOf(m.PER_NATCOD),m);addToIndex(idx.ins,codeOf(m.DSW_ID1),m)}
+ const seenMaster=new Map(),seenPay=new Map();for(const p of payrollData)addToIndex(seenPay,norm(p._sourceName),p);
+ const found=payrollData.map(p=>findMaster(p,idx));
+ const taken=new Set();for(const [ms] of found)if(ms.length===1)taken.add(ms[0]);
+ payrollData.forEach((p,i)=>{const err=[...p._errors],warn=[...p._warnings];const [matches,matchBy]=found[i];let suggestion=null;
+ // Never silently choose among duplicate persons.
+ const m=matches.length===1?matches[0]:null;
+ if(!matches.length){let best=null,score=0;for(const c of masterRows){if(taken.has(c))continue;const s=similarity(nameOf(c),p._sourceName);if(s>score){score=s;best=c}}
+  if(best&&score>=0.75){suggestion=best;err.push('با این نام در بانک پرسنل پیدا نشد؛ احتمالاً «'+nameOf(best)+'» است')}
+  else err.push('در بانک پرسنل پیدا نشد؛ ابتدا این فرد را در اکسل پرسنل ثبت کنید')}
+ if(matches.length>1)err.push('تطبیق مبهم است: چند نفر با مشخصات یکسان در بانک وجود دارند');
+ if(seenPay.get(norm(p._sourceName)).length>1)err.push('نام کامل در لیست حقوق تکراری است و نیازمند بررسی است');
+ if(m){seenMaster.set(m,(seenMaster.get(m)||0)+1);
+  if(norm(m._status)!==norm('فعال')&&!leftInListMonth(m))err.push('این فرد در بانک پرسنل «فعال» نیست');
+  if(norm(nameOf(m))!==norm(p._sourceName)){if(matchBy==='تأیید دستی نام')warn.push('نام در اکسل حقوق «'+p._sourceName+'» است؛ با تأیید شما به «'+nameOf(m)+'» وصل شد و نام بانک پرسنل در فایل بیمه درج می‌شود');else err.push('نام ثبت‌شده در دو اکسل یکسان نیست ('+nameOf(m)+' / '+p._sourceName+')')}
+  if(p._national&&codeOf(m.PER_NATCOD)!==p._national)err.push('کد ملی دو اکسل متفاوت است');
+  if(p._insurance&&codeOf(m.DSW_ID1)!==p._insurance)err.push('شماره بیمه دو اکسل متفاوت است');
+  masterChecks(m,err,warn);
  }
- linkRows.push({pay:p,master:m,combined,errors:[...new Set(err)],warnings:[...new Set(warn)],matchBy});}
+ const combined=m?fillCombined(m,p,matchBy,err):null;
+ linkRows.push({pay:p,master:m,combined,errors:[...new Set(err)],warnings:[...new Set(warn)],matchBy,suggestion});});
  for(const item of linkRows)if(item.master&&seenMaster.get(item.master)>1)item.errors.push('این مشخصات پرسنلی به بیش از یک ردیف حقوق اتصال یافته است');
+ // کسانی که در ماه همین لیست ترک کار کرده‌اند و در اکسل حقوق نیستند: با صفر روز اعلام می‌شوند.
+ if(work){const used=new Set(linkRows.map(x=>x.master).filter(Boolean));
+  for(const m of masterRows){if(used.has(m)||!leftInListMonth(m))continue;
+   const key=$('sheetSelect').value+'|'+codeOf(m.PER_NATCOD)+'|'+norm(nameOf(m));const hint=listColumnSays(m);
+   const choice=leaverChoice.has(key)?leaverChoice.get(key):hint;
+   const p={_sourceName:nameOf(m),_row:'—',_errors:[],_warnings:[],DSW_DD:0,DSW_ROOZ:0,DSW_MAH:0,DSW_MAZ:0,DSW_MASH:0,DSW_TOTL:0,DSW_BIME:0,DSW_INC:0,DSW_SPOUSE:'0',DSW_PRATE:0};
+   const err=[],warn=['ترک کار در همین ماه ('+m.DSW_EDATE+')؛ با ۰ روز در لیست اعلام می‌شود'];
+   const item={pay:p,master:m,combined:null,errors:[],warnings:warn,matchBy:'ترک کار',leaver:true,leaverKey:key,choice};
+   if(choice===true){masterChecks(m,err,warn);item.combined=fillCombined(m,p,'ترک کار',err);item.errors=[...new Set(err)];linkRows.push(item)}
+   else{if(choice!==false)item.errors=['ترک کار در همین ماه؛ مشخص کنید در این لیست اعلام شود یا مربوط به لیست دیگر است'];leaverRows.push(item)}}}
  syncData();paintMatch();}
-function renderRow(index,item){const p=item.pay,r=item.combined,m=item.master;
- const status=item.errors.length?'<span class="status bad">نیازمند اصلاح</span>':item.warnings.length?'<span class="status warn">قابل بررسی</span>':'<span class="status green">تأیید</span>';
- const detail=item.errors.length?item.errors.slice(0,2).join('؛ '):item.warnings.length?item.warnings.slice(0,2).join('؛ '):'تطبیق با '+item.matchBy;
- return `<tr><td class="mono">${index+1}</td><td class="fullname">${esc(p._sourceName)}</td><td>${status}</td><td class="mono">${esc(m?.DSW_ID1||'—')}</td><td class="mono">${esc(m?.PER_NATCOD||'—')}</td><td>${esc(m?.DSW_OCP||'—')}</td><td class="mono">${fmt(p.DSW_DD)}</td><td class="mono wage">${fmt(p.DSW_MASH)}</td><td class="mono wage">${fmt(p.DSW_BIME)}</td><td class="muted" style="max-width:340px;white-space:normal">${esc(detail)}</td></tr>`;}
-function paintMatch(){const complete=!!work&&masterFileLoaded;
+function renderRow(index,item){const p=item.pay,m=item.master;
+ const status=item.leaver?(item.choice===true?'<span class="status warn">ترک کار • در این لیست</span>':item.choice===false?'<span class="status">ترک کار • لیست دیگر</span>':'<span class="status bad">ترک کار • انتخاب کنید</span>')
+  :item.errors.length?'<span class="status bad">نیازمند اصلاح</span>':item.warnings.length?'<span class="status warn">قابل بررسی</span>':'<span class="status green">تأیید</span>';
+ let detail=esc(item.errors.length?item.errors.slice(0,2).join('؛ '):item.warnings.length?item.warnings.slice(0,2).join('؛ '):'تطبیق با '+item.matchBy);
+ if(item.suggestion)detail+=`<div class="rowact"><button type="button" class="smallbtn" data-alias="${index}">تأیید: همان «${esc(nameOf(item.suggestion))}» است</button></div>`;
+ if(item.matchBy==='تأیید دستی نام')detail+=`<div class="rowact"><button type="button" class="textbtn" data-unalias="${index}">لغو تطبیق دستی</button></div>`;
+ if(item.leaver)detail=`<div>ترک کار: ${esc(m.DSW_EDATE)} — با ۰ روز</div><div class="rowact"><select class="leaversel" data-leaver="${index}"><option value=""${item.choice==null?' selected':''}>— انتخاب کنید —</option><option value="1"${item.choice===true?' selected':''}>در این لیست اعلام شود</option><option value="0"${item.choice===false?' selected':''}>مربوط به لیست دیگر است</option></select></div>`;
+ return `<tr${item.leaver&&item.choice===false?' class="dim"':''}><td class="mono">${index+1}</td><td class="fullname">${esc(p._sourceName)}</td><td>${status}</td><td class="mono">${esc(m?.DSW_ID1||'—')}</td><td class="mono">${esc(m?.PER_NATCOD||'—')}</td><td>${esc(m?.DSW_OCP||'—')}</td><td class="mono">${fmt(p.DSW_DD)}</td><td class="mono wage">${fmt(p.DSW_MASH)}</td><td class="mono wage">${fmt(p.DSW_BIME)}</td><td class="muted" style="max-width:360px;white-space:normal">${detail}</td></tr>`;}
+const allRows=()=>[...linkRows,...leaverRows];
+function paintMatch(){const complete=!!work&&masterFileLoaded;const rows=allRows();
  $('statPayroll').textContent=fmt(payrollData.length);
- const matched=linkRows.filter(x=>x.master&&!x.errors.length),errors=linkRows.filter(x=>x.errors.length);
- const used=new Set(linkRows.map(x=>x.master).filter(Boolean));const unused=masterRows.filter(x=>norm(x._status)===norm('فعال')&&!used.has(x));
+ const matched=linkRows.filter(x=>x.master&&!x.errors.length&&!x.leaver),errors=rows.filter(x=>x.errors.length),leavers=rows.filter(x=>x.leaver),leaversIn=linkRows.filter(x=>x.leaver);
+ const used=new Set(linkRows.map(x=>x.master).filter(Boolean));const unused=masterRows.filter(x=>norm(x._status)===norm('فعال')&&!used.has(x)&&!leftInListMonth(x));
  $('statMatched').textContent=fmt(matched.length);$('statProblems').textContent=fmt(errors.length);$('statUnused').textContent=fmt(unused.length);
- $('matchSubtitle').textContent=!complete?'دو فایل اکسل را وارد کنید.':`${fmt(payrollData.length)} نفر از حقوق، ${fmt(matched.length)} تطبیق بدون خطا، ${fmt(errors.length)} مورد نیازمند اصلاح؛ ${fmt(unused.length)} پرسنل فعال در فایل حقوق این ماه نیستند.`;
- const q=norm($('search').value);const shown=linkRows.map((x,i)=>({x,i})).filter(y=>(matchMode==='all'||y.x.errors.length)&&(!q||norm([y.x.pay._sourceName,y.x.master?.PER_NATCOD,y.x.master?.DSW_ID1].join(' ')).includes(q)));
+ $('matchSubtitle').textContent=!complete?'دو فایل اکسل را وارد کنید.':`${fmt(payrollData.length)} نفر از حقوق، ${fmt(matched.length)} تطبیق بدون خطا، ${fmt(errors.length)} مورد نیازمند اصلاح؛ ${fmt(leavers.length)} نفر ترک کار در این ماه؛ ${fmt(unused.length)} پرسنل فعال دیگر در فایل حقوق این ماه نیستند.`;
+ const q=norm($('search').value);const shown=rows.map((x,i)=>({x,i})).filter(y=>(matchMode==='all'||y.x.errors.length)&&(!q||norm([y.x.pay._sourceName,y.x.master?.PER_NATCOD,y.x.master?.DSW_ID1].join(' ')).includes(q)));
  $('matchedRows').innerHTML=shown.length?shown.map(y=>renderRow(y.i,y.x)).join(''):`<tr><td colspan="10" class="empty">${complete?'موردی در این فیلتر پیدا نشد.':'برای نمایش کارکنان، هر دو اکسل را بارگذاری کنید.'}</td></tr>`;
  $('reportBtn').disabled=errors.length===0;
  $('issuesBox').hidden=errors.length===0;
- $('issuesTitle').textContent=errors.length?`${fmt(errors.length)} فرد نیازمند اصلاح در فایل‌های منبع هستند`:'';
+ $('issuesTitle').textContent=errors.length?`${fmt(errors.length)} مورد نیازمند رسیدگی است`:'';
  $('issuesLines').innerHTML=errors.slice(0,8).map(x=>`<div class="issue"><b>${esc(x.pay._sourceName)}:</b> ${esc(x.errors.slice(0,3).join('؛ '))}</div>`).join('');
  const workshopValid=/^\d{10}$/.test(codeOf($('workshop').value));const y=number($('year').value),month=number($('month').value);const paramsOk=workshopValid&&y>=1300&&y<=1599&&month>=1&&month<=12&&nonempty($('listno').value)&&digits($('listno').value).length<=12;
  const ready=complete&&payrollData.length>0&&!errors.length&&paramsOk;
- $('exportBtn').disabled=!ready;$('exportTitle').textContent=!complete?'ابتدا دو اکسل را انتخاب کنید':!payrollData.length?'در شیت انتخابی شخصی یافت نشد':errors.length?`${fmt(errors.length)} مورد باید در فایل‌های اکسل اصلاح شود`:!paramsOk?'کد کارگاه و مشخصات ماه را بررسی کنید':'فایل بیمه آماده دریافت است';
- $('exportHint').textContent=!complete?'اکسل حقوق، و اکسل اطلاعات پایه پرسنل، هر دو لازم هستند.':errors.length?'اصلاحات را در اکسل حقوق یا بانک پرسنل انجام دهید و همان فایل را دوباره بارگذاری کنید.':`فقط ${fmt(matched.length)} نفر حاضر در لیست حقوق این ماه وارد DBF خواهند شد. پرسنل خارج از لیست ماه اضافه نمی‌شوند.`;}
+ $('exportBtn').disabled=!ready;$('exportTitle').textContent=!complete?'ابتدا دو اکسل را انتخاب کنید':!payrollData.length?'در شیت انتخابی شخصی یافت نشد':errors.length?`${fmt(errors.length)} مورد باید رسیدگی شود`:!paramsOk?'کد کارگاه و مشخصات ماه را بررسی کنید':'فایل بیمه آماده دریافت است';
+ $('exportHint').textContent=!complete?'اکسل حقوق، و اکسل اطلاعات پایه پرسنل، هر دو لازم هستند.':errors.length?'موارد قرمز جدول را رسیدگی کنید (اصلاح در اکسل، تأیید نام یا انتخاب لیست ترک‌کارکرده‌ها).':`${fmt(linkRows.length)} نفر وارد DBF می‌شوند: ${fmt(matched.length)} نفر از لیست حقوق${leaversIn.length?' و '+fmt(leaversIn.length)+' نفر ترک کار با ۰ روز':''}.`;}
+$('matchedRows').addEventListener('click',e=>{const rows=allRows();
+ const a=e.target.closest('[data-alias]');if(a){const item=rows[+a.dataset.alias];const s=item&&item.suggestion;if(!s)return;const nat=codeOf(s.PER_NATCOD);nameAliases[norm(item.pay._sourceName)]=validNational(nat)?nat:'name:'+norm(nameOf(s));saveAliases();buildMatch();notify('تطبیق «'+item.pay._sourceName+'» با «'+nameOf(s)+'» ذخیره شد؛ ماه‌های بعد در همین مرورگر خودکار انجام می‌شود.');return}
+ const u=e.target.closest('[data-unalias]');if(u){const item=rows[+u.dataset.unalias];if(!item)return;delete nameAliases[norm(item.pay._sourceName)];saveAliases();buildMatch();notify('تطبیق دستی لغو شد.')}});
+$('matchedRows').addEventListener('change',e=>{const s=e.target.closest('[data-leaver]');if(!s)return;const item=allRows()[+s.dataset.leaver];if(!item)return;if(s.value==='')leaverChoice.delete(item.leaverKey);else leaverChoice.set(item.leaverKey,s.value==='1');buildMatch()});
+for(const id of ['year','month'])$(id).addEventListener('change',buildMatch);
 async function openPayroll(file){if(!file)return;try{if(!/\.xlsx$/i.test(file.name))throw Error('فایل باید xlsx باشد');setState('payState','در حال خواندن','warn');work=await readExcel(file);$('payName').textContent=file.name;const sel=$('sheetSelect');sel.innerHTML='';for(const s of work){if(!s.rows.length||!s.rows.some(r=>Object.keys(r).some(k=>norm(k).includes(norm('نام ونام خانوادگي')))))continue;const opt=document.createElement('option');opt.textContent=s.name;opt.value=s.name;sel.append(opt)}if(!sel.options.length)throw Error('هیچ شیت دارای ستون «نام ونام خانوادگي» یافت نشد');sel.disabled=false;sel.value=(work.find(x=>norm(x.name)===norm('بیمه'))||{name:sel.options[0].value}).name;
  const chosen=work.find(x=>x.name===sel.value);if(chosen){const first=chosen.rows.find(r=>String(pick(keyObj(r),'نام ونام خانوادگي')).trim());if(first){const k=keyObj(first),year=number(pick(k,'سال')),month=monthNumber(pick(k,'ماه'));if(year>=1300&&year<1600)$('year').value=year;if(month)$('month').value=month}}
  setState('payState','خوانده شد','green');buildMatch();notify('اکسل حقوق باز شد. اکنون بانک پرسنل را هم انتخاب کنید.')}catch(e){work=null;payrollData=[];linkRows=[];setState('payState','خطا','bad');paintMatch();notify(e.message);console.error(e)}}
@@ -342,7 +390,7 @@ async function openMaster(file){if(!file)return;try{if(!/\.xlsx$/i.test(file.nam
 function exportResult(){buildMatch();if($('exportBtn').disabled){notify('هنوز موارد ضروری اصلاح نشده‌اند.');return}try{syncData();const data=makeDbf(linkRows.map(x=>x.combined));lastGenerated=data;download(data,'DSKWOR00.dbf','application/octet-stream');notify('فایل DBF برای '+fmt(linkRows.length)+' نفر آماده شد. برای کنترل می‌توانید همین فایل را در بخش بازبینی باز کنید.');}catch(e){notify('خطای ساخت فایل: '+e.message);console.error(e)}}
 function csvCell(s){return '"'+String(s??'').replace(/"/g,'""')+'"'}
 function download(payload,name,mime){const data=payload instanceof Uint8Array?payload:new TextEncoder().encode(payload);const url=URL.createObjectURL(new Blob([data],{type:mime}));const link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2500)}
-function reportCsv(){const rows=[['ردیف اکسل','نام و نام خانوادگی','نتیجه','شرح خطا','نکات'],...linkRows.filter(x=>x.errors.length||x.warnings.length).map(x=>[x.pay._row,x.pay._sourceName,x.errors.length?'نیازمند اصلاح':'قابل بررسی',x.errors.join('؛ '),x.warnings.join('؛ ')])];download('\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'گزارش_عدم_تطبیق_پرسنل.csv','text/csv;charset=utf-8')}
+function reportCsv(){const rows=[['ردیف اکسل','نام و نام خانوادگی','نتیجه','شرح خطا','نکات'],...allRows().filter(x=>x.errors.length||x.warnings.length).map(x=>[x.pay._row,x.pay._sourceName,x.errors.length?'نیازمند اصلاح':'قابل بررسی',x.errors.join('؛ '),x.warnings.join('؛ ')])];download('\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'گزارش_عدم_تطبیق_پرسنل.csv','text/csv;charset=utf-8')}
 function previewDbf(result,name){viewerData=result;const ok=result.fields.length===SCHEMA.length&&result.header===961&&result.record===469&&result.language===0x7e&&result.fields.every((f,i)=>f.name===SCHEMA[i].name&&f.type===SCHEMA[i].type&&f.len===SCHEMA[i].len);
  $('viewerSummary').innerHTML=`<div class="minirow"><div class="smallstat"><span>نام فایل</span><b style="font-size:13px">${esc(name)}</b></div><div class="smallstat"><span>تعداد رکورد</span><b>${fmt(result.records.length)}</b></div><div class="smallstat"><span>تعداد ستون</span><b>${fmt(result.fields.length)}</b></div><div class="smallstat"><span>تطابق با نمونه ارسالی</span><b style="font-size:14px;color:${ok?'#087c5f':'#a61227'}">${ok?'تأیید ساختار':'قالب متفاوت'}</b></div></div><div class="muted" style="margin-top:8px">${ok?'ساختار فایل با نمونه سازگار است.':'ساختار متفاوت است؛ برای خروجی بیمه این سامانه از قالب نمونه استفاده می‌کند.'} نمایش فارسی برای DBFهای سایر نرم‌افزارها ممکن است به کدگذاری متفاوتی نیاز داشته باشد.</div>`;
  $('viewerSearch').disabled=false;$('viewerToExcel').disabled=!['DSW_FNAME','DSW_LNAME','DSW_ID1','PER_NATCOD'].every(key=>result.fields.some(f=>f.name===key));$('viewerCsv').disabled=false;
