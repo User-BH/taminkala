@@ -3,34 +3,28 @@
   'use strict';
   var root = document.documentElement;
   var KEY = 'tkb-theme';
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  var LABELS = { auto: 'خودکار (مطابق دستگاه)', light: 'حالت روشن', dark: 'حالت تاریک' };
 
+  /* ---------- تم: پیش‌فرض روشن؛ انتخاب تاریک کاربر ذخیره می‌شود ---------- */
   function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
-  function read() { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } }
+  function read() { try { return localStorage.getItem(KEY) === 'dark' ? 'dark' : 'light'; } catch (e) { return 'light'; } }
 
-  /* ---------- تم: خودکار ← روشن ← تاریک ---------- */
-  function applyTheme(pref) {
-    root.setAttribute('data-theme-pref', pref);
-    if (pref === 'auto') root.removeAttribute('data-theme');
-    else root.setAttribute('data-theme', pref);
-    var dark = pref === 'dark' || (pref === 'auto' && mq.matches);
+  function applyTheme(theme) {
+    if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+    else root.removeAttribute('data-theme');
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', dark ? '#15100e' : '#991522');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#15100e' : '#991522');
     var btn = document.getElementById('themeBtn');
-    if (btn) {
-      btn.setAttribute('aria-label', 'تغییر تم — ' + LABELS[pref]);
-      btn.querySelector('.t-label').textContent = LABELS[pref];
-    }
+    var label = theme === 'dark' ? 'حالت روشن' : 'حالت تاریک';
+    btn.setAttribute('aria-label', 'رفتن به ' + label);
+    btn.setAttribute('aria-pressed', theme === 'dark');
+    btn.querySelector('.t-label').textContent = label;
   }
   applyTheme(read());
   document.getElementById('themeBtn').addEventListener('click', function () {
-    var order = ['auto', 'light', 'dark'];
-    var next = order[(order.indexOf(read()) + 1) % order.length];
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     store(next);
     applyTheme(next);
   });
-  mq.addEventListener && mq.addEventListener('change', function () { applyTheme(read()); });
 
   /* ---------- هدر و دکمه بازگشت به بالا ---------- */
   var header = document.querySelector('.site-header');

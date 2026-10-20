@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa" dir="rtl" data-theme-pref="auto">
+<html lang="fa" dir="rtl">
 <!-- طراحی و توسعه: شرکت رهوار پیوند داده -->
 <head>
   <meta charset="utf-8">
@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/img/favicon-192.png">
   <!-- جلوگیری از چشمک زدن تم قبل از بارگذاری کامل -->
   <script>
-    try { var p = localStorage.getItem('tkb-theme'); if (p === 'light' || p === 'dark') { document.documentElement.setAttribute('data-theme', p); document.documentElement.setAttribute('data-theme-pref', p); } } catch (e) {}
+    try { if (localStorage.getItem('tkb-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
   </script>
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
   <link href="assets/css/style.css" rel="stylesheet">
@@ -27,7 +27,6 @@
 <!-- ============ آیکون‌ها ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="i-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
@@ -76,10 +75,9 @@
     </ul>
     <div class="nav-tools">
       <button class="icon-btn theme-btn" id="themeBtn" type="button" aria-label="تغییر تم">
-        <svg class="i ic-auto"><use href="#i-auto"/></svg>
         <svg class="i ic-sun"><use href="#i-sun"/></svg>
         <svg class="i ic-moon"><use href="#i-moon"/></svg>
-        <span class="t-label">خودکار (مطابق دستگاه)</span>
+        <span class="t-label">حالت تاریک</span>
       </button>
       <a href="#partner" class="btn btn-primary">درخواست همکاری</a>
       <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="منو" aria-controls="menu" aria-expanded="false">

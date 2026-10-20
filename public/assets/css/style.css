@@ -28,26 +28,7 @@
   color-scheme: light;
 }
 
-/* حالت تاریک: خودکار بر اساس دستگاه، مگر کاربر لایت را انتخاب کرده باشد */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ink: #f3ece6;
-    --muted: #b3a7a0;
-    --bg: #15100e;
-    --bg-2: #1c1513;
-    --surface: #211917;
-    --surface-2: #261d1a;
-    --line: #3a2d29;
-    --soft: #3a1a1c;
-    --red-2: #ff5c68;
-    --header-bg: rgba(21, 16, 14, .78);
-    --shadow: 0 14px 40px rgba(0, 0, 0, .35);
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .5);
-    --ph-a: #2a201d;
-    --ph-b: #241b18;
-    color-scheme: dark;
-  }
-}
+/* حالت تاریک: فقط با انتخاب کاربر (پیش‌فرض روشن) */
 :root[data-theme="dark"] {
   --ink: #f3ece6;
   --muted: #b3a7a0;
@@ -95,7 +76,6 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
   background: var(--soft); padding: 5px 14px; border-radius: 99px;
 }
 :root[data-theme="dark"] .eyebrow { color: var(--red-2); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .eyebrow { color: var(--red-2); } }
 
 .sec-head { max-width: 680px; margin-bottom: 46px; }
 .sec-head.center { text-align: center; margin-inline: auto; }
@@ -153,9 +133,10 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 }
 .theme-btn:hover .t-label, .theme-btn:focus-visible .t-label { opacity: 1; }
 .theme-btn svg { display: none; }
-:root[data-theme-pref="auto"] .theme-btn .ic-auto,
-:root[data-theme-pref="light"] .theme-btn .ic-sun,
-:root[data-theme-pref="dark"] .theme-btn .ic-moon { display: block; }
+/* در حالت روشن آیکن ماه (رفتن به تاریک) و در حالت تاریک آیکن خورشید */
+.theme-btn .ic-moon { display: block; }
+:root[data-theme="dark"] .theme-btn .ic-moon { display: none; }
+:root[data-theme="dark"] .theme-btn .ic-sun { display: block; }
 .menu-btn { display: none; }
 
 /* ---------- هیرو ---------- */

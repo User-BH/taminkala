@@ -10,7 +10,7 @@
   <!-- مسیرها مطلق هستند تا در هر آدرسی (مثلاً /a/b/c) درست بارگذاری شوند -->
   <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32">
   <script>
-    try { var p = localStorage.getItem('tkb-theme'); if (p === 'light' || p === 'dark') document.documentElement.setAttribute('data-theme', p); } catch (e) {}
+    try { if (localStorage.getItem('tkb-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
   </script>
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
   <link href="/assets/css/style.css" rel="stylesheet">
