@@ -51,7 +51,7 @@ SITE_PORT="80"
 PICHAK_PORT="8081"
 PICHAK_UPSTREAM="127.0.0.1:8088"
 BIME_PORT="8082"
-BIME_ROOT="/var/www/bime"
+LEGACY_BIME_ROOT="/var/www/bime"   # محل قبلی؛ اکنون بیمه و حواله از مخزن ($APP_DIR/bime) سرو می‌شود
 
 # ---------- خروجی رنگی ----------
 if [[ -t 1 ]]; then
@@ -99,7 +99,6 @@ SITE_PORT="$SITE_PORT"
 PICHAK_PORT="$PICHAK_PORT"
 PICHAK_UPSTREAM="$PICHAK_UPSTREAM"
 BIME_PORT="$BIME_PORT"
-BIME_ROOT="$BIME_ROOT"
 EOF
   chmod 600 "$CONF_FILE"
 }
@@ -114,7 +113,6 @@ ask_settings() {
   ask PICHAK_PORT     "پورت سامانه پیچک"
   ask PICHAK_UPSTREAM "آدرس داخلی برنامه پیچک (PICHAK_BIND)"
   ask BIME_PORT       "پورت سامانه بیمه و حواله"
-  ask BIME_ROOT       "پوشه فایل‌های بیمه و حواله"
   for p in "$SITE_PORT" "$PICHAK_PORT" "$BIME_PORT"; do valid_port "$p" || die "پورت نامعتبر: $p"; done
   [[ $(printf '%s\n' "$SITE_PORT" "$PICHAK_PORT" "$BIME_PORT" | sort -u | wc -l) -eq 3 ]] || die "پورت‌ها باید با هم فرق داشته باشند."
   [[ ${PICHAK_UPSTREAM##*:} != "$PICHAK_PORT" ]] || die "پورت پیچک نباید با پورت داخلی برنامه پیچک یکی باشد."
@@ -182,7 +180,7 @@ render() {  # render <template> <output>
       -e "s|{{PICHAK_PORT}}|$PICHAK_PORT|g" \
       -e "s|{{PICHAK_UPSTREAM}}|$PICHAK_UPSTREAM|g" \
       -e "s|{{BIME_PORT}}|$BIME_PORT|g" \
-      -e "s|{{BIME_ROOT}}|$BIME_ROOT|g" \
+      -e "s|{{BIME_ROOT}}|$APP_DIR/bime|g" \
       -e "s|{{SITE_ROOT}}|$APP_DIR/public|g" \
       -e "s|{{SERVER_NAME}}|$SERVER_NAME|g" "$1" > "$2"
   # سرورهایی که IPv6 ندارند
@@ -198,11 +196,23 @@ reload_nginx() {
   fi
 }
 
+# نسخه قدیمی بیمه و حواله که دستی در /var/www/bime کپی شده بود، اگر با نسخه مخزن
+# فرق داشته باشد یک‌بار پشتیبان گرفته می‌شود تا تغییری گم نشود.
+keep_legacy_bime() {
+  local old=$LEGACY_BIME_ROOT/index.html new=$APP_DIR/bime/index.html
+  [[ -f $old ]] || return 0
+  [[ -f $new ]] && cmp -s "$old" "$new" && return 0
+  local f="$BACKUP_DIR/bime-from-server-$1.html"
+  ls "$BACKUP_DIR"/bime-from-server-*.html >/dev/null 2>&1 && cmp -s "$old" "$(ls -1 "$BACKUP_DIR"/bime-from-server-*.html | tail -1)" && return 0
+  cp "$old" "$f"
+  warn "فایل بیمه و حواله روی سرور با نسخه مخزن فرق داشت؛ پشتیبان: $f"
+}
+
 apply_nginx() {
   say "اعمال پیکربندی Nginx…"
   local tpl=$APP_DIR/deploy/nginx stamp; stamp=$(date +%Y%m%d-%H%M%S)
-  mkdir -p "$BACKUP_DIR" "$NGINX_SNIPPETS" "$BIME_ROOT"
-  chmod -R a+rX "$BIME_ROOT"           # فایل کپی‌شده با scp ممکن است برای Nginx قابل خواندن نباشد
+  mkdir -p "$BACKUP_DIR" "$NGINX_SNIPPETS"
+  keep_legacy_bime "$stamp"
   # پشتیبان از پیکربندی فعلی برای برگشت در صورت خطا
   local saved=()
   for f in "$NGINX_SITE" "$NGINX_SNIPPETS"/taminkala-*.conf; do
@@ -253,7 +263,7 @@ health() {
   check "صفحه ۴۰۴ برای /pichak"           "http://127.0.0.1:$SITE_PORT/pichak"     404
   check "سامانه پیچک (پورت $PICHAK_PORT)"  "http://127.0.0.1:$PICHAK_PORT/"         200
   check "سامانه بیمه و حواله (پورت $BIME_PORT)" "http://127.0.0.1:$BIME_PORT/"      200
-  [[ -f $BIME_ROOT/index.html ]] || warn "فایل $BIME_ROOT/index.html وجود ندارد؛ فایل HTML بیمه و حواله را با همین نام آنجا کپی کنید."
+  [[ -f $APP_DIR/bime/index.html ]] || warn "فایل bime/index.html در مخزن نیست."
   [[ $(http_code "http://$PICHAK_UPSTREAM/api/health") == 200 ]] || warn "برنامه پیچک روی $PICHAK_UPSTREAM پاسخ نمی‌دهد؛ سرویس پیچک را بررسی کنید."
 }
 
@@ -320,7 +330,7 @@ cmd_status() {
                      "پوشه سایت:" "$APP_DIR" \
                      "سایت اصلی:" "پورت $SITE_PORT" \
                      "پیچک:" "پورت $PICHAK_PORT → $PICHAK_UPSTREAM" \
-                     "بیمه و حواله:" "پورت $BIME_PORT ← $BIME_ROOT"
+                     "بیمه و حواله:" "پورت $BIME_PORT ← $APP_DIR/bime"
   if [[ -d /run/systemd/system ]]; then
     printf '  • %s %s\n' "Nginx:" "$(systemctl is-active nginx 2>/dev/null || true)"
     local u; for u in $(systemctl list-units --all --plain --no-legend '*pichak*' 2>/dev/null | awk '{print $1}'); do
