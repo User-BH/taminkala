@@ -23,7 +23,7 @@ set -Eeuo pipefail
 if [[ -z ${TKB_RUNNING_COPY:-} ]]; then
   _tmp=$(mktemp /tmp/taminkala.XXXXXX.sh)
   cp "$(readlink -f "$0")" "$_tmp"
-  TKB_RUNNING_COPY=$_tmp exec bash "$_tmp" "$@"
+  TKB_SRC_DIR=$(dirname "$(readlink -f "$0")") TKB_RUNNING_COPY=$_tmp exec bash "$_tmp" "$@"
 fi
 trap 'rm -f "$TKB_RUNNING_COPY"' EXIT
 
@@ -38,6 +38,13 @@ CMD_LINK=/usr/local/bin/taminkala
 # ---------- مقادیر پیش‌فرض (در اولین نصب پرسیده می‌شوند) ----------
 REPO_URL="https://github.com/User-BH/taminkala.git"
 BRANCH="main"
+# اگر اسکریپت از داخل یک کپی مخزن اجرا شود، آدرس و شاخه همان کپی پیش‌فرض می‌شود
+if _src=$(git -C "${TKB_SRC_DIR:-.}" rev-parse --show-toplevel 2>/dev/null); then
+  _u=$(git -C "$_src" config --get remote.origin.url 2>/dev/null || true)
+  _b=$(git -C "$_src" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+  [[ -n $_u ]] && REPO_URL=$_u
+  [[ -n $_b && $_b != HEAD ]] && BRANCH=$_b
+fi
 APP_DIR="/opt/taminkala"
 SERVER_NAME="_"
 SITE_PORT="80"
@@ -63,12 +70,19 @@ trap 'die "خطا در خط $LINENO. عملیات متوقف شد؛ تغییری
 need_root() { [[ $EUID -eq 0 ]] || die "این اسکریپت را با sudo اجرا کنید:  sudo $0 ${1:-}"; }
 
 # پرسش با مقدار پیش‌فرض:  ask VAR "سؤال"
+# ترمینال برای پرسش‌ها (اگر نباشد، مقادیر پیش‌فرض بدون پرسش استفاده می‌شوند)
+if { : </dev/tty; } 2>/dev/null; then TTY=/dev/tty; else TTY=; fi
+
 ask() {
   local __var=$1 __q=$2 __def=${!1} __ans
-  { read -r -p "  $__q [${__def}]: " __ans </dev/tty; } 2>/dev/null || true
+  if [[ -n $TTY ]]; then
+    read -r -p "  $__q [${__def}]: " __ans <"$TTY" || true
+  else
+    printf '  %s: %s\n' "$__q" "$__def"
+  fi
   printf -v "$__var" '%s' "${__ans:-$__def}"
 }
-confirm() { local a; { read -r -p "  $1 [y/N]: " a </dev/tty; } 2>/dev/null || true; [[ $a == [yY] || $a == yes || $a == بله ]]; }
+confirm() { local a=; [[ -z $TTY ]] || read -r -p "  $1 [y/N]: " a <"$TTY" || true; [[ $a == [yY] || $a == yes || $a == بله ]]; }
 
 valid_port() { [[ $1 =~ ^[0-9]+$ ]] && (( $1 >= 1 && $1 <= 65535 )); }
 
@@ -356,7 +370,8 @@ menu() {
   5) تغییر تنظیمات (پورت‌ها / دامنه)
   0) خروج
 EOF
-  local c; { read -r -p "  انتخاب: " c </dev/tty; } 2>/dev/null || true
+  [[ -n $TTY ]] || { cmd_help; exit 1; }
+  local c; read -r -p "  انتخاب: " c <"$TTY" || true
   case $c in
     1) cmd_install ;; 2) cmd_update ;; 3) cmd_status ;;
     4) if confirm "مطمئن هستید؟"; then cmd_rollback; fi ;;
