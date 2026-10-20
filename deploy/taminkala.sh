@@ -56,10 +56,10 @@ need_root() { [[ $EUID -eq 0 ]] || die "این اسکریپت را با sudo ا�
 # پرسش با مقدار پیش‌فرض:  ask VAR "سؤال"
 ask() {
   local __var=$1 __q=$2 __def=${!1} __ans
-  read -r -p "  $__q [${__def}]: " __ans </dev/tty || true
+  { read -r -p "  $__q [${__def}]: " __ans </dev/tty; } 2>/dev/null || true
   printf -v "$__var" '%s' "${__ans:-$__def}"
 }
-confirm() { local a; read -r -p "  $1 [y/N]: " a </dev/tty || true; [[ $a == [yY] || $a == yes || $a == بله ]]; }
+confirm() { local a; { read -r -p "  $1 [y/N]: " a </dev/tty; } 2>/dev/null || true; [[ $a == [yY] || $a == yes || $a == بله ]]; }
 
 valid_port() { [[ $1 =~ ^[0-9]+$ ]] && (( $1 >= 1 && $1 <= 65535 )); }
 
@@ -179,6 +179,7 @@ apply_nginx() {
   say "اعمال پیکربندی Nginx…"
   local tpl=$APP_DIR/deploy/nginx stamp; stamp=$(date +%Y%m%d-%H%M%S)
   mkdir -p "$BACKUP_DIR" "$NGINX_SNIPPETS" "$BIME_ROOT"
+  chmod -R a+rX "$BIME_ROOT"           # فایل کپی‌شده با scp ممکن است برای Nginx قابل خواندن نباشد
   # پشتیبان از پیکربندی فعلی برای برگشت در صورت خطا
   local saved=()
   for f in "$NGINX_SITE" "$NGINX_SNIPPETS"/taminkala-*.conf; do
@@ -338,7 +339,7 @@ menu() {
   5) تغییر تنظیمات (پورت‌ها / دامنه)
   0) خروج
 EOF
-  local c; read -r -p "  انتخاب: " c </dev/tty || true
+  local c; { read -r -p "  انتخاب: " c </dev/tty; } 2>/dev/null || true
   case $c in
     1) cmd_install ;; 2) cmd_update ;; 3) cmd_status ;;
     4) if confirm "مطمئن هستید؟"; then cmd_rollback; fi ;;
