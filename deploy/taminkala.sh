@@ -148,7 +148,7 @@ current_commit() { git_safe rev-parse --short HEAD 2>/dev/null || echo "-"; }
 fetch_code() {
   if [[ -d $APP_DIR/.git ]]; then
     say "دریافت آخرین نسخه از مخزن ($BRANCH)…"
-    git_safe fetch --quiet origin "$BRANCH" || die "دریافت از مخزن ناموفق بود. اتصال اینترنت یا دسترسی مخزن را بررسی کنید."
+    git_safe fetch --quiet origin "$BRANCH" || die "دریافت از مخزن ناموفق بود. اگر مخزن خصوصی شده، یک‌بار اجرا کنید:  sudo taminkala deploy-key"
     # اگر کسی روی سرور فایلی از مخزن را دستی تغییر داده، قبل از بازنویسی پشتیبان می‌گیریم
     if ! git_safe diff --quiet HEAD; then
       mkdir -p "$BACKUP_DIR"
@@ -341,6 +341,42 @@ cmd_settings() {
   health
 }
 
+# کلید فقط‌خواندنی برای مخزن خصوصی GitHub (Deploy key)
+DEPLOY_KEY=/root/.ssh/taminkala_deploy
+SSH_ALIAS=github.com-taminkala
+
+cmd_deploy_key() {
+  need_root deploy-key
+  load_conf
+  local path
+  path=$(sed -E 's#^(https://([^@/]*@)?github\.com/|git@github\.com(-taminkala)?:)##; s#\.git$##' <<<"$REPO_URL")
+  [[ $path =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "آدرس مخزن GitHub قابل تشخیص نیست: $REPO_URL"
+  if ! command -v ssh-keygen >/dev/null; then
+    say "نصب openssh-client…"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssh-client >/dev/null
+  fi
+  mkdir -p /root/.ssh && chmod 700 /root/.ssh
+  [[ -f $DEPLOY_KEY ]] || ssh-keygen -q -t ed25519 -N "" -C "taminkala-server-$(hostname)" -f "$DEPLOY_KEY"
+  if ! grep -q "^Host $SSH_ALIAS\$" /root/.ssh/config 2>/dev/null; then
+    printf '\nHost %s\n  HostName ssh.github.com\n  Port 443\n  ConnectTimeout 15\n  User git\n  IdentityFile %s\n  IdentitiesOnly yes\n  StrictHostKeyChecking accept-new\n' "$SSH_ALIAS" "$DEPLOY_KEY" >> /root/.ssh/config
+    chmod 600 /root/.ssh/config
+  fi
+
+  line
+  say "${W}این کلید را در GitHub اضافه کنید:${N}"
+  echo "  https://github.com/$path/settings/keys  →  Add deploy key"
+  echo "  Title: سرور تأمین کالا   —   تیک «Allow write access» را نزنید"
+  line; cat "$DEPLOY_KEY.pub"; line
+  [[ -n $TTY ]] && read -r -p "  بعد از اضافه کردن کلید Enter بزنید… " _ <"$TTY"
+
+  local url="git@$SSH_ALIAS:$path.git"
+  git ls-remote "$url" >/dev/null 2>&1 || die "اتصال با کلید برقرار نشد. مطمئن شوید کلید بالا در Deploy keys مخزن اضافه شده و دوباره اجرا کنید."
+  REPO_URL=$url
+  save_conf
+  [[ -d $APP_DIR/.git ]] && git_safe remote set-url origin "$url"
+  ok "اتصال امن به مخزن خصوصی برقرار شد. از این به بعد:  sudo taminkala update"
+}
+
 cmd_pichak_ocr() {
   need_root pichak-ocr
   load_conf
@@ -364,6 +400,7 @@ ${W}استفاده:${N}  sudo taminkala [دستور]
   settings   تغییر پورت‌ها، دامنه و مسیرها
   pichak-ocr نصب OCR جدید کپچای پیچک  (pichak-ocr rollback = برگشت)
   doctor     عیب‌یابی پیچک و جمع‌آوری نمونه کپچا
+  deploy-key اتصال سرور به مخزن خصوصی GitHub (یک‌بار)
   help       همین راهنما
 
 بدون دستور، منوی ساده نمایش داده می‌شود.
@@ -384,6 +421,7 @@ menu() {
   5) تغییر تنظیمات (پورت‌ها / دامنه)
   6) نصب / به‌روزرسانی OCR پیچک
   7) عیب‌یابی پیچک
+  8) اتصال به مخزن خصوصی (Deploy key)
   0) خروج
 EOF
   [[ -n $TTY ]] || { cmd_help; exit 1; }
@@ -394,6 +432,7 @@ EOF
     5) cmd_settings ;;
     6) cmd_pichak_ocr ;;
     7) cmd_doctor ;;
+    8) cmd_deploy_key ;;
     *) exit 0 ;;
   esac
 }
@@ -407,6 +446,7 @@ case ${1:-} in
   _after_update) cmd_after_update ;;
   pichak-ocr) cmd_pichak_ocr "${2:-}" ;;
   doctor)   cmd_doctor ;;
+  deploy-key) cmd_deploy_key ;;
   help|-h|--help) cmd_help ;;
   "") menu ;;
   *) cmd_help; exit 1 ;;
