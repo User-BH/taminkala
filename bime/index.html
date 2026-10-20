@@ -156,7 +156,7 @@ tr.dim td{opacity:.55}
 <div class="grid4">
 <div class="field"><label for="kmUser">کاربر ثبت‌کننده</label><select id="kmUser"><option value="">— انتخاب کنید —</option><option value="13">داود موسوی</option><option value="14">احسان فیضی</option><option value="35">علی بافنده</option><option value="42">آرزو ابراهیمی</option></select></div>
 <div class="field"><label for="kmCode">شماره حواله</label><input id="kmCode" dir="ltr" inputmode="numeric" maxlength="12" placeholder="مثلاً 1250"></div>
-<div class="field"><label for="kmDate">تاریخ ثبت (شمسی)</label><input id="kmDate" dir="ltr" maxlength="10" placeholder="1405/06/31"><div class="tiny" id="kmDateG">میلادی: —</div></div>
+<div class="field"><label for="kmDate">تاریخ ثبت (شمسی)</label><input id="kmDate" type="tel" dir="ltr" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="1405/06/31" data-date><div class="tiny" id="kmDateG">میلادی: —</div></div>
 <div class="field"><label for="kmBehalf">بابت</label><input id="kmBehalf" placeholder="حقوق شهریور 1405"></div>
 </div>
 <p class="tiny" style="margin:12px 0 0">کدهای ثابت تبریز: شعبه ۱ • معین ۳۲۲۰ (حقوق و دستمزد پرداختی) • تفصیلی ۱۳۲۰۳ (حقوق خالص پرداختی) • سطح پنجم ۲۳۱۷ (تبریز) • بانک ۱۳ (قرض‌الحسنه رسالت تبریز) • سال مالی ۱۴۰۵ = ۸. «توضیحات» هر ردیف نام فرد در کارآمد است.</p>
@@ -476,6 +476,15 @@ paintMatch();
     document.querySelectorAll('main > [role="tabpanel"]').forEach(t => { t.hidden = t.id !== 'tab-' + name; });
   }
   document.querySelectorAll('.apptab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // فیلدهای تاریخ (data-date): ارقام پشت سر هم تایپ می‌شوند و اسلش‌ها خودکار گذاشته می‌شود: 14050631 ← 1405/06/31
+  // در فاز capture اجرا می‌شود تا قبل از بقیه شنونده‌های همان فیلد مقدار قالب‌بندی‌شده را ببینند.
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!el.matches || !el.matches('input[data-date]')) return;
+    const d = el.value.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '').slice(0, 8);
+    el.value = d.length > 6 ? d.slice(0, 4) + '/' + d.slice(4, 6) + '/' + d.slice(6) : d.length > 4 ? d.slice(0, 4) + '/' + d.slice(4) : d;
+  }, true);
 
   function showStep(n){
     n = String(n);
