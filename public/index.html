@@ -53,6 +53,9 @@
     <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.5 11h10L20 7H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></symbol>
     <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></symbol>
     <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="m10 13 4-4"/></symbol>
+    <symbol id="i-cheque" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M6 10h7M6 14h4M15.5 13.5l1.5 1.5 3-3.5"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
     <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.5-4A8 8 0 1 1 8 18.5z"/><path d="M9 10h6M9 13h4"/></symbol>
   </defs>
 </svg>
@@ -71,6 +74,7 @@
       <li><a href="#services">خدمات</a></li>
       <li><a href="#brands">برندها</a></li>
       <li><a href="#gallery">گالری</a></li>
+      <li><a href="#portal">سامانه‌ها</a></li>
       <li><a href="#contact">تماس با ما</a></li>
     </ul>
     <div class="nav-tools">
@@ -79,7 +83,7 @@
         <svg class="i ic-moon"><use href="#i-moon"/></svg>
         <span class="t-label">حالت تاریک</span>
       </button>
-      <a href="#partner" class="btn btn-primary">درخواست همکاری</a>
+      <a href="#portal" class="btn btn-primary" data-portal="pichak"><svg class="i"><use href="#i-cheque"/></svg> استعلام چک</a>
       <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="منو" aria-controls="menu" aria-expanded="false">
         <svg class="i"><use href="#i-menu"/></svg>
       </button>
@@ -105,7 +109,7 @@
     </div>
     <div class="hero-visual">
       <!-- عکس اصلی: assets/img/photos/hero.jpg (پیشنهاد: عمودی، حدود ۱۲۰۰×۱۳۰۰) -->
-      <div class="media" data-src="assets/img/photos/hero.jpg" data-label="عکس اصلی صفحه — انبار یا ناوگان توزیع"></div>
+      <div class="media" data-src="assets/img/photos/fleet.jpg" data-pos="80% 50%" data-alt="ناوگان توزیع تأمین کالا باختر" data-label="ناوگان توزیع"></div>
       <div class="float-card two"><span class="fi"><svg class="i"><use href="#i-truck"/></svg></span><span><b>تحویل به‌موقع</b>ناوگان اختصاصی</span></div>
       <div class="float-card one"><span class="fi"><svg class="i"><use href="#i-shield"/></svg></span><span><b>کالای اصل</b>تأمین مستقیم از تولیدکننده</span></div>
     </div>
@@ -126,11 +130,45 @@
   </div>
 </section>
 
+<!-- ============ سامانه‌های کارکنان ============ -->
+<!-- نشانی دقیق هر سامانه در مرورگر ساخته می‌شود: همان نشانی سایت + پورت سامانه (از /ports.json) -->
+<section class="section portal" id="portal">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">سامانه‌های کارکنان</span>
+      <h2>ورود به سامانه‌های داخلی شرکت</h2>
+      <p>این دو سامانه برای همکاران شرکت است؛ نشانی مستقیم هر کدام را می‌توانید ذخیره کنید یا برای همکاران بفرستید.</p>
+    </div>
+    <div class="portal-grid">
+      <article class="portal-card reveal">
+        <div class="portal-icon"><svg class="i"><use href="#i-cheque"/></svg></div>
+        <span class="portal-who">ویژه همکاران فروش</span>
+        <h3>استعلام وضعیت ثبتی چک</h3>
+        <p>پیش از دریافت چک از مشتری، ثبت آن در سامانه‌ی صیاد بانک مرکزی را با شناسه‌ی صیادی، تاریخ سررسید و مبلغ استعلام کنید.</p>
+        <div class="portal-actions">
+          <a class="btn btn-primary" data-portal="pichak" href="#portal">ورود به استعلام چک <svg class="i"><use href="#i-arrow"/></svg></a>
+          <button type="button" class="portal-addr" data-copy="pichak" title="کپی نشانی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="pichak">—</span></button>
+        </div>
+      </article>
+      <article class="portal-card reveal">
+        <div class="portal-icon"><svg class="i"><use href="#i-doc"/></svg></div>
+        <span class="portal-who">ویژه واحد مالی و منابع انسانی</span>
+        <h3>سامانه‌ی بیمه و حواله</h3>
+        <p>ساخت لیست و فایل کارگاه بیمه‌ی تأمین اجتماعی و فایل حواله‌ی حقوق نرم‌افزار کارآمد؛ همه‌ی پردازش در همان مرورگر انجام می‌شود.</p>
+        <div class="portal-actions">
+          <a class="btn btn-outline" data-portal="bime" href="#portal">ورود به سامانه <svg class="i"><use href="#i-arrow"/></svg></a>
+          <button type="button" class="portal-addr" data-copy="bime" title="کپی نشانی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime">—</span></button>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
 <!-- ============ درباره ما ============ -->
 <section class="section" id="about">
   <div class="wrap about-grid">
     <div class="about-media reveal">
-      <div class="media" data-src="assets/img/photos/about-1.jpg" data-label="عکس ساختمان یا دفتر مرکزی"></div>
+      <div class="media" data-src="assets/img/photos/building.jpg" data-pos="22% 40%" data-alt="ساختمان دفتر مرکزی تأمین کالا باختر" data-label="ساختمان دفتر مرکزی"></div>
       <div class="media" data-src="assets/img/photos/about-2.jpg" data-label="عکس تیم"></div>
       <div class="media" data-src="assets/img/photos/about-3.jpg" data-label="عکس قفسه‌های انبار"></div>
       <div class="about-badge"><b data-count="15" data-suffix="+">۱۵+</b><span>سال همراهی با بازار</span></div>
@@ -269,7 +307,7 @@
       <h2>نگاهی به مجموعه ما</h2>
     </div>
     <div class="gallery reveal">
-      <div class="media g1" data-src="assets/img/photos/gallery-1.jpg" data-label="عکس نمای کلی انبار"></div>
+      <div class="media g1" data-src="assets/img/photos/warehouse.jpg" data-pos="50% 55%" data-alt="محوطه و انبارهای شرکت" data-label="محوطه انبارها"></div>
       <div class="media g2" data-src="assets/img/photos/gallery-2.jpg" data-label="عکس ناوگان"></div>
       <div class="media g3" data-src="assets/img/photos/gallery-3.jpg" data-label="عکس بارگیری"></div>
       <div class="media g4" data-src="assets/img/photos/gallery-4.jpg" data-label="عکس تیم فروش / دفتر"></div>
@@ -334,7 +372,7 @@
       </div>
       <div>
         <h4>دسترسی سریع</h4>
-        <ul><li><a href="#about">درباره ما</a></li><li><a href="#services">خدمات</a></li><li><a href="#brands">برندها</a></li><li><a href="#contact">تماس با ما</a></li></ul>
+        <ul><li><a href="#portal">استعلام چک</a></li><li><a href="#about">درباره ما</a></li><li><a href="#services">خدمات</a></li><li><a href="#brands">برندها</a></li><li><a href="#contact">تماس با ما</a></li></ul>
       </div>
       <div>
         <h4>حوزه فعالیت</h4>

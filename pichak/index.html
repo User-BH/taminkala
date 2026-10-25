@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سامانه استعلام چک | تامین کالا باختر</title>
+    <link href="/static/fallback.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap.rtl.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css'">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <script src="/static/vendor/html5-qrcode.min.js?v=4" type="text/javascript"></script>
+    <style>
+        :root {
+            --brand-red: #C62828;
+            --brand-red-dark: #8E0000;
+            --brand-dark: #16181D;
+            --brand-surface: #FFFFFF;
+            --brand-bg: #F1F3F6;
+        }
+        body {
+            background-color: var(--brand-bg);
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            color: #212529;
+            padding-bottom: 30px;
+        }
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        /* هدر اختصاصی تامین کالا باختر */
+        .brand-header {
+            background: linear-gradient(135deg, var(--brand-dark) 0%, #2B2D38 100%);
+            color: #fff;
+            border-bottom-left-radius: 28px;
+            border-bottom-right-radius: 28px;
+            padding: 22px 18px 45px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            position: relative;
+        }
+        .logo-wrapper {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 4px 14px rgba(198, 40, 40, 0.5);
+            background-color: var(--brand-red);
+            flex-shrink: 0;
+        }
+        .logo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.06); /* حذف حاشیه مشکی اطراف دایره لوگو */
+        }
+        .company-badge {
+            background: rgba(198, 40, 40, 0.25);
+            border: 1px solid rgba(229, 57, 53, 0.5);
+            color: #ffcdd2;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        /* کارت اصلی فرم */
+        .main-card {
+            background: var(--brand-surface);
+            border-radius: 20px;
+            margin-top: -28px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            border: none;
+            position: relative;
+            z-index: 2;
+        }
+        .btn-scan-primary {
+            background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .btn-scan-primary:hover, .btn-scan-primary:active {
+            color: #fff;
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .btn-scan-secondary {
+            background-color: #fff5f5;
+            color: var(--brand-red);
+            border: 1px dashed var(--brand-red);
+            border-radius: 12px;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        #reader {
+            width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            display: none;
+            border: 2px solid var(--brand-red);
+        }
+        /* کارت اطلاعات استخراج‌شده از بارکد */
+        .barcode-details-card {
+            background-color: #f8f9fa;
+            border-right: 4px solid var(--brand-red);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.82rem;
+            display: none;
+        }
+        .form-control {
+            border-radius: 12px;
+            padding: 11px 14px;
+            border: 1.5px solid #dee2e6;
+            background-color: #fcfcfc;
+        }
+        .form-control:focus {
+            border-color: var(--brand-red);
+            box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.15);
+            background-color: #fff;
+        }
+        .ltr-input {
+            direction: ltr;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 1.05rem;
+        }
+        .btn-submit {
+            background: var(--brand-dark);
+            color: #fff;
+            border-radius: 14px;
+            padding: 14px;
+            font-weight: 700;
+            border: none;
+            box-shadow: 0 6px 16px rgba(22, 24, 29, 0.25);
+        }
+        .btn-submit:hover {
+            background: #000;
+            color: #fff;
+        }
+        .captcha-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Pichak v5: responsive inquiry result dialog (no external libraries) */
+        .pichak-result-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(13, 17, 23, .68);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+            overflow: auto;
+        }
+        .pichak-result-overlay.is-open { display: flex; }
+        .pichak-result-dialog {
+            width: min(100%, 460px);
+            max-height: min(85vh, 720px);
+            max-height: min(85dvh, 720px);
+            overflow-y: auto;
+            background: #fff;
+            color: #20252c;
+            border-radius: 22px;
+            box-shadow: 0 26px 65px rgba(0,0,0,.32);
+            position: relative;
+            padding: 28px 22px 22px;
+            text-align: center;
+        }
+        .pichak-result-close {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            border: 0;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            font-size: 24px;
+            line-height: 1;
+            color: #5d6570;
+            background: #f1f3f5;
+            cursor: pointer;
+        }
+        .pichak-result-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            font-size: 36px;
+            background: #fff4e5;
+            color: #a9640a;
+            margin-bottom: 16px;
+        }
+        .pichak-result-overlay[data-kind="success"] .pichak-result-icon {
+            background: #e5f7ec;
+            color: #168044;
+        }
+        .pichak-result-overlay[data-kind="error"] .pichak-result-icon {
+            background: #ffeded;
+            color: #bf2934;
+        }
+        .pichak-result-dialog h2 {
+            margin: 0 0 10px;
+            font-size: 1.23rem;
+            font-weight: 800;
+        }
+        .pichak-result-message {
+            line-height: 1.95;
+            color: #535d69;
+            font-size: .96rem;
+            margin: 0 0 16px;
+            overflow-wrap: anywhere;
+            white-space: pre-line;
+        }
+        .pichak-result-holders {
+            text-align: right;
+            display: grid;
+            gap: 10px;
+            margin: 14px 0;
+        }
+        .pichak-result-holder {
+            background: #f7f9fa;
+            border: 1px solid #e3e7eb;
+            border-right: 4px solid #198754;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: .88rem;
+            line-height: 2;
+            overflow-wrap: anywhere;
+        }
+        .pichak-result-holder strong { color: #343a40; }
+        .pichak-result-holder .pichak-value { font-weight: 600; }
+        .pichak-result-done {
+            border: 0;
+            border-radius: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            background: #202329;
+            color: white;
+            font-weight: 750;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .pichak-result-close:focus-visible, .pichak-result-done:focus-visible {
+            outline: 3px solid #c62828;
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .pichak-result-overlay.is-open .pichak-result-dialog {
+                animation: pichak-pop-in .18s ease-out;
+            }
+            @keyframes pichak-pop-in {
+                from { opacity: 0; transform: translateY(12px) scale(.97); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- هدر برند تامین کالا باختر -->
+    <div class="brand-header d-flex align-items-center gap-3">
+        <div class="logo-wrapper">
+            <img src="/logo.png" alt="تامین کالا باختر" onerror="this.style.display='none'">
+        </div>
+        <div>
+            <h5 class="fw-bold mb-1">شرکت تامین کالا باختر</h5>
+            <div class="small text-white-50">سامانه استعلام ثبت چک صیادی (بانک مرکزی)</div>
+            <div class="company-badge">
+                گیرنده حقوقی | شناسه ملی: <span dir="ltr" class="fw-bold">14005736802</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container px-3">
+        <div class="main-card">
+            <!-- دکمه‌های اسکن بارکد -->
+            <div class="row g-2 mb-3">
+                <div class="col-7">
+                    <button type="button" id="scanBtn" class="btn btn-scan-primary w-100" onclick="toggleLiveScanner()">
+                        📷 اسکن زنده بارکد
+                    </button>
+                </div>
+                <div class="col-5">
+                    <label for="cameraFileInput" class="btn btn-scan-secondary w-100 mb-0 text-center cursor-pointer">
+                        📸 عکس از بارکد
+                    </label>
+                    <input type="file" id="cameraFileInput" accept="image/*" capture="environment" class="d-none" onchange="scanFromFile(this)">
+                </div>
+            </div>
+
+            <!-- کادر دوربین -->
+            <div id="reader" class="mb-3"></div>
+            <div id="fileReaderTemp" class="d-none"></div>
+
+            <!-- مشخصات استخراج شده از بارکد 7 خطی چک -->
+            <div id="barcodeInfoBox" class="barcode-details-card mb-3">
+                <div class="fw-bold text-danger mb-2">📌 اطلاعات استخراج‌شده از بارکد چک:</div>
+                <div class="row g-1">
+                    <div class="col-6"><strong>صادرکننده:</strong> <span id="bcIssuerType">-</span></div>
+                    <div class="col-6"><strong>کد/شناسه ملی:</strong> <span id="bcIssuerId" dir="ltr">-</span></div>
+                    <div class="col-6"><strong>کد بانک و شعبه:</strong> <span id="bcBankBranch" dir="ltr">-</span></div>
+                    <div class="col-6"><strong>سریال چک:</strong> <span id="bcSerial" dir="ltr">-</span></div>
+                    <div class="col-12 mt-1"><strong>شماره شبا:</strong> <span id="bcIban" dir="ltr" class="text-muted" style="font-size:0.78rem;">-</span></div>
+                </div>
+            </div>
+
+            <!-- فرم استعلام -->
+            <form id="inquiryForm" onsubmit="submitForm(event)">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">شناسه صیادی ۱۶ رقمی چک</label>
+                    <input type="tel" id="sayadId" class="form-control ltr-input" maxlength="16" placeholder="6505050110397823" required>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-secondary mb-1">تاریخ سررسید (شمسی)</label>
+                        <input type="tel" id="dueDate" class="form-control ltr-input" maxlength="10" placeholder="1405/09/03" oninput="formatDate(this)" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-secondary mb-1">مبلغ چک (ریال)</label>
+                        <input type="tel" id="amount" class="form-control ltr-input" placeholder="370,000,000" oninput="formatAmount(this)" required>
+                    </div>
+                    <div class="col-12">
+                        <div id="tomanHelper" class="text-danger fw-bold text-center small" style="min-height: 20px;"></div>
+                    </div>
+                </div>
+
+                <!-- بخش کپچا -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">کد امنیتی بانک مرکزی</label>
+                    <div class="captcha-box d-flex align-items-center justify-content-between mb-2">
+                        <img id="captchaImg" src="" alt="در حال دریافت کپچا..." style="height: 42px; width: 175px; border-radius: 6px;">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1" onclick="loadCaptcha()" title="دریافت مجدد کپچا">
+                            🔄 رفرش
+                        </button>
+                    </div>
+                    <input type="tel" id="captchaAnswer" class="form-control ltr-input" placeholder="کد تصویر بالا را وارد کنید" required>
+                     <div id="captchaOcrStatus" class="small text-muted mt-1" aria-live="polite"></div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-submit w-100">
+                    🔍 استعلام وضعیت ثبت چک
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Pichak v5 inquiry result popup: independent of Bootstrap -->
+<div id="pichakResultOverlay" class="pichak-result-overlay" data-kind="warning" aria-hidden="true">
+    <section id="pichakResultDialog" class="pichak-result-dialog" role="dialog" aria-modal="true"
+             aria-labelledby="pichakResultTitle" aria-describedby="pichakResultMessage" tabindex="-1">
+        <button type="button" id="pichakResultClose" class="pichak-result-close" aria-label="بستن نتیجه" onclick="closeInquiryResult()">&times;</button>
+        <div class="pichak-result-icon" id="pichakResultIcon" aria-hidden="true">!</div>
+        <h2 id="pichakResultTitle">نتیجه استعلام</h2>
+        <p id="pichakResultMessage" class="pichak-result-message"></p>
+        <div id="pichakResultHolders" class="pichak-result-holders"></div>
+        <button type="button" class="pichak-result-done" id="pichakResultDone" onclick="closeInquiryResult()">متوجه شدم</button>
+    </section>
+</div>
+
+
+<script>
+    let currentSessionKey = "";
+    let html5QrCode = null;
+    let isScanning = false;
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+    }
+
+    function toEnglishDigits(str) {
+        if (!str) return "";
+        return str.toString()
+            .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+            .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    }
+
+    // تجزیه هوشمند ساختار 7 خطی بارکد چک صیادی
+    function parseSayadBarcode(rawText) {
+        const clean = toEnglishDigits(rawText).trim();
+        const lines = clean.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
+
+        // اگر بارکد به صورت 7 خط استاندارد صیادی بود
+        if (lines.length >= 6) {
+            const issuerType = lines[1] === "1" ? "حقیقی" : (lines[1] === "2" ? "حقوقی" : lines[1]);
+            const issuerId = lines[2] || "-";
+            const iban = lines[3] || "-";
+            const bankBranch = lines[4] || "-";
+            const serial = lines[5] || "-";
+            const sayadId = lines[lines.length - 1];
+
+            document.getElementById("bcIssuerType").innerText = issuerType;
+            document.getElementById("bcIssuerId").innerText = issuerId;
+            document.getElementById("bcIban").innerText = iban;
+            document.getElementById("bcBankBranch").innerText = bankBranch;
+            document.getElementById("bcSerial").innerText = serial;
+            document.getElementById("barcodeInfoBox").style.display = "block";
+
+            if (/^\d{16}$/.test(sayadId)) {
+                document.getElementById("sayadId").value = sayadId;
+                return true;
+            }
+        }
+
+        // حالت پشتیبان: استخراج آخرین عدد 16 رقمی موجود در بارکد
+        const allMatches = clean.match(/\d{16}/g);
+        if (allMatches && allMatches.length > 0) {
+            document.getElementById("sayadId").value = allMatches[allMatches.length - 1];
+            return true;
+        }
+        return false;
+    }
+
+    function formatDate(input) {
+        let val = toEnglishDigits(input.value).replace(/\D/g, '');
+        if (val.length > 4 && val.length <= 6) {
+            val = val.slice(0, 4) + '/' + val.slice(4);
+        } else if (val.length > 6) {
+            val = val.slice(0, 4) + '/' + val.slice(4, 6) + '/' + val.slice(6, 8);
+        }
+        input.value = val;
+    }
+
+    function formatAmount(input) {
+        let raw = toEnglishDigits(input.value).replace(/\D/g, '');
+        const helper = document.getElementById("tomanHelper");
+        if (!raw) {
+            input.value = "";
+            helper.innerText = "";
+            return;
+        }
+        const amountBig = BigInt(raw);
+        input.value = amountBig.toLocaleString('en-US');
+        helper.innerText = `معادل: ${(amountBig / 10n).toLocaleString('fa-IR')} تومان`;
+    }
+
+    // ۱. اسکن زنده با دوربین (نیازمند HTTPS)
+    function toggleLiveScanner() {
+        const readerDiv = document.getElementById("reader");
+        const scanBtn = document.getElementById("scanBtn");
+        if (typeof Html5Qrcode === 'undefined') {
+            alert('کتابخانه اسکن بارکد بارگذاری نشد. اتصال به CDN را بررسی کنید یا شناسه را دستی وارد کنید.');
+            return;
+        }
+
+        if (isScanning && html5QrCode) {
+            html5QrCode.stop().then(() => {
+                readerDiv.style.display = "none";
+                scanBtn.innerText = "📷 اسکن زنده بارکد";
+                isScanning = false;
+            });
+            return;
+        }
+
+        readerDiv.style.display = "block";
+        scanBtn.innerText = "❌ بستن دوربین";
+
+        const formats = [
+            Html5QrcodeSupportedFormats.DATA_MATRIX,
+            Html5QrcodeSupportedFormats.QR_CODE
+        ];
+        html5QrCode = new Html5Qrcode("reader", { formatsToSupport: formats });
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 12, qrbox: { width: 240, height: 240 } },
+            (decodedText) => {
+                if (parseSayadBarcode(decodedText)) {
+                    if (navigator.vibrate) navigator.vibrate(200);
+                    toggleLiveScanner();
+                    document.getElementById("dueDate").focus();
+                }
+            }
+        ).then(() => {
+            isScanning = true;
+        }).catch(() => {
+            readerDiv.style.display = "none";
+            scanBtn.innerText = "📷 اسکن زنده بارکد";
+            alert("برای اسکن زنده، سایت باید با HTTPS باز شود. اگر با IP وارد شده‌اید، از دکمه «📸 عکس از بارکد» در کنار آن استفاده کنید.");
+        });
+    }
+
+    // ۲. اسکن از طریق عکس گرفتن مستقیم (کارکرد هم روی HTTP/IP و هم HTTPS)
+    function scanFromFile(input) {
+        if (!input.files || input.files.length === 0) return;
+        const imageFile = input.files[0];
+        if (typeof Html5Qrcode === 'undefined') {
+            alert('کتابخانه اسکن بارکد بارگذاری نشده است.');
+            return;
+        }
+        const fileScanner = new Html5Qrcode('fileReaderTemp', {
+            formatsToSupport: [Html5QrcodeSupportedFormats.DATA_MATRIX, Html5QrcodeSupportedFormats.QR_CODE]
+        });
+
+        fileScanner.scanFile(imageFile, true)
+            .then(decodedText => {
+                if (parseSayadBarcode(decodedText)) {
+                    if (navigator.vibrate) navigator.vibrate(200);
+                    document.getElementById("dueDate").focus();
+                } else {
+                    alert("بارکد خوانده شد اما شناسه ۱۶ رقمی صیادی در آن یافت نشد.");
+                }
+            })
+            .catch(() => {
+                alert("بارکد چک در تصویر تشخیص داده نشد. لطفاً دوربین را نزدیک‌تر بگیرید تا بارکد مربعی واضح بیفتد.");
+            });
+    }
+
+    async function loadCaptcha() {
+        const img = document.getElementById("captchaImg");
+        document.getElementById("captchaAnswer").value = "";
+        document.getElementById("captchaOcrStatus").textContent = "";
+        currentSessionKey = "";
+        img.style.opacity = "0.4";
+        try {
+            const res = await fetch("/api/captcha");
+            const data = await res.json();
+            if (data.success) {
+                currentSessionKey = data.session_key;
+                img.src = data.captcha_src;
+                const ocrStatus = document.getElementById('captchaOcrStatus');
+                if (data.auto_suggested && /^\d{1,6}$/.test(String(data.auto_answer)) &&
+                    /^\d{1,2}[+*\-]\d{1,2}$/.test(String(data.ocr_expression || ''))) {
+                    const answer = String(data.auto_answer);
+                    const expression = String(data.ocr_expression);
+                    ocrStatus.textContent = 'پیشنهاد OCR: ' + expression + ' = ' + answer + ' — عبارت داخل تصویر را مقایسه کنید. ';
+                    const acceptBtn = document.createElement('button');
+                    acceptBtn.type = 'button';
+                    acceptBtn.textContent = 'استفاده از پاسخ پیشنهادی';
+                    acceptBtn.className = 'btn btn-sm btn-outline-secondary mt-1';
+                    const thisSession = data.session_key;
+                    acceptBtn.addEventListener('click', () => {
+                        if (currentSessionKey === thisSession) {
+                            document.getElementById('captchaAnswer').value = answer;
+                            acceptBtn.disabled = true;
+                        }
+                    });
+                    ocrStatus.appendChild(acceptBtn);
+                } else {
+                    ocrStatus.textContent = 'OCR پاسخ قابل اطمینانی پیدا نکرد؛ پاسخ تصویر را دستی وارد کنید.';
+                }
+            } else {
+                alert("خطا در دریافت کپچا: " + data.message + (data.error_code ? " (" + data.error_code + ")" : ""));
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('captchaOcrStatus').textContent = 'خطا در ارتباط با سرور برای دریافت کپچا.';
+        } finally {
+            img.style.opacity = "1";
+        }
+    }
+
+
+    // Popup state and keyboard accessibility; no Bootstrap or external JS needed.
+    let pichakPreviousFocus = null;
+    let pichakPreviousOverflow = '';
+
+    function closeInquiryResult() {
+        const overlay = document.getElementById('pichakResultOverlay');
+        if (!overlay.classList.contains('is-open')) return;
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = pichakPreviousOverflow;
+        if (pichakPreviousFocus && pichakPreviousFocus.isConnected && typeof pichakPreviousFocus.focus === 'function') {
+            pichakPreviousFocus.focus();
+        }
+        pichakPreviousFocus = null;
+    }
+
+    function showInquiryResult(kind, title, message, holders) {
+        const overlay = document.getElementById('pichakResultOverlay');
+        const list = document.getElementById('pichakResultHolders');
+        document.getElementById('pichakResultTitle').textContent = title;
+        document.getElementById('pichakResultMessage').textContent = String(message || 'نتیجه مشخص نیست.');
+        document.getElementById('pichakResultIcon').textContent = kind === 'success' ? '✓' : kind === 'error' ? '×' : '!';
+        overlay.dataset.kind = kind;
+        list.replaceChildren();
+        for (const holder of (Array.isArray(holders) ? holders : [])) {
+            const card = document.createElement('div');
+            card.className = 'pichak-result-holder';
+            const name = document.createElement('div');
+            const labelName = document.createElement('strong');
+            labelName.textContent = 'نام دارنده: ';
+            const valueName = document.createElement('span');
+            valueName.className = 'pichak-value';
+            valueName.textContent = String(holder.name ?? '-');
+            name.append(labelName, valueName);
+            const identity = document.createElement('div');
+            const labelIdentity = document.createElement('strong');
+            labelIdentity.textContent = 'شناسه/کد ملی: ';
+            const valueIdentity = document.createElement('span');
+            valueIdentity.dir = 'ltr';
+            valueIdentity.textContent = String(holder.id_code ?? '-');
+            const type = document.createElement('span');
+            type.textContent = ' (' + String(holder.customer_type ?? '-') + ')';
+            identity.append(labelIdentity, valueIdentity, type);
+            card.append(name, identity);
+            list.appendChild(card);
+        }
+        if (!overlay.classList.contains('is-open')) {
+            pichakPreviousFocus = document.activeElement;
+            pichakPreviousOverflow = document.body.style.overflow;
+        }
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('pichakResultClose').focus();
+    }
+
+    document.getElementById('pichakResultOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeInquiryResult();
+    });
+    document.addEventListener('keydown', function(e) {
+        const overlay = document.getElementById('pichakResultOverlay');
+        if (!overlay.classList.contains('is-open')) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeInquiryResult();
+        } else if (e.key === 'Tab') {
+            const buttons = [...overlay.querySelectorAll('button:not([disabled])')];
+            if (!buttons.length) return;
+            const first = buttons[0], last = buttons[buttons.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault(); last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault(); first.focus();
+            }
+        }
+    });
+
+    async function submitForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = '⏳ در حال استعلام از بانک مرکزی...';
+        let refreshCaptcha = false;
+
+        try {
+            if (!currentSessionKey) {
+                showInquiryResult('warning', 'کپچا آماده نیست', 'ابتدا کپچای معتبر را دریافت کنید و دوباره استعلام بگیرید.');
+                refreshCaptcha = true;
+                return;
+            }
+            const payload = {
+                session_key: currentSessionKey,
+                sayad_id: toEnglishDigits(document.getElementById('sayadId').value),
+                due_date: toEnglishDigits(document.getElementById('dueDate').value),
+                amount: toEnglishDigits(document.getElementById('amount').value),
+                captcha_answer: toEnglishDigits(document.getElementById('captchaAnswer').value)
+            };
+            // Each issued session is one-time-use; always refresh after a submission.
+            refreshCaptcha = true;
+            const response = await fetch('/api/inquire', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (response.ok && data.success === true && data.is_registered === true) {
+                showInquiryResult('success', 'چک ثبت شده است', data.message || 'ثبت چک توسط بانک مرکزی تأیید شد.', data.holders);
+            } else if (response.ok && data.success === true && data.is_registered === false) {
+                showInquiryResult('warning', 'چک ثبت نشده است', data.message || 'چک در استعلام ثبت نشده گزارش شده است.');
+            } else {
+                // Do not present malformed CBI responses, expired captcha, or network errors as "not registered".
+                showInquiryResult('warning', 'نتیجه قابل تأیید نیست', data.message || 'نتیجه استعلام نامشخص است؛ در سامانه رسمی بانک بررسی کنید.');
+            }
+        } catch (err) {
+            showInquiryResult('error', 'ارتباط برقرار نشد', 'در ارتباط با سرور یا دریافت نتیجه اختلال ایجاد شد. دوباره تلاش کنید.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔍 استعلام وضعیت ثبت چک';
+            if (refreshCaptcha) loadCaptcha();
+        }
+    }
+
+    window.onload = loadCaptcha;
+</script>
+</body>
+</html>

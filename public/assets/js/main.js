@@ -67,7 +67,12 @@
     img.alt = box.getAttribute('data-alt') || box.getAttribute('data-label') || '';
     img.loading = 'lazy';
     img.decoding = 'async';
-    img.onload = function () { box.appendChild(img); box.classList.add('has-img'); };
+    if (box.getAttribute('data-pos')) img.style.objectPosition = box.getAttribute('data-pos');
+    // تصویر باید داخل صفحه باشد تا lazy کار کند؛ تا بارگذاری نشده پنهان می‌ماند و جای خالی دیده می‌شود
+    img.style.opacity = '0';
+    img.onload = function () { img.style.opacity = ''; box.classList.add('has-img'); };
+    img.onerror = function () { img.remove(); };
+    box.appendChild(img);
     img.src = box.getAttribute('data-src');
   });
 
@@ -112,6 +117,25 @@
       el.textContent = fa.format(+el.getAttribute('data-count')) + (el.getAttribute('data-suffix') || '');
     });
   }
+
+  /* ---------- سامانه‌های کارکنان: نشانی = همین سرور + پورت هر سامانه ---------- */
+  var PORTS = { pichak: 8081, bime: 8082 };
+  function portalUrl(name) { return location.protocol + '//' + location.hostname + ':' + PORTS[name] + '/'; }
+  function paintPortal() {
+    document.querySelectorAll('[data-portal]').forEach(function (a) { a.href = portalUrl(a.getAttribute('data-portal')); });
+    document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = location.hostname + ':' + PORTS[s.getAttribute('data-addr')]; });
+  }
+  paintPortal();
+  if (window.fetch) fetch('/ports.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (p) { if (p) { ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; }); paintPortal(); } }).catch(function () {});
+  document.querySelectorAll('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var url = portalUrl(b.getAttribute('data-copy')), span = b.querySelector('[data-addr]'), old = span.textContent;
+      var done = function () { span.textContent = 'کپی شد ✓'; setTimeout(function () { span.textContent = old; }, 1500); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function () { window.prompt('نشانی را کپی کنید:', url); });
+      else window.prompt('نشانی را کپی کنید:', url);
+    });
+  });
 
   document.getElementById('year').textContent = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric' }).format(new Date());
 })();

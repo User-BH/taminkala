@@ -1,0 +1,338 @@
+"""Small, single-worker CBI Sayad check web application.
+
+This is an *experimental* integration with a public ASP.NET page, not an
+approved CBI API. Always verify actual CBI HTML/network responses in Iran.
+"""
+from __future__ import annotations
+
+import base64
+import io
+import logging
+import os
+import re
+import threading
+import time
+import uuid
+from collections import OrderedDict
+from dataclasses import dataclass
+from pathlib import Path
+
+import requests
+from urllib.parse import urljoin, urlparse
+from bs4 import BeautifulSoup
+from captcha_inline import extract_inline_captcha_source
+from flask import Flask, jsonify, request, send_from_directory
+
+HERE = Path(__file__).resolve().parent
+CBI_URL = "https://cbi.ir/EstelamPichak/22036.aspx"
+FIXED_CUSTOMER_TYPE = "2"  # حقوقی
+FIXED_ID_CODE = "14005736802"  # شرکت تامین کالا باختر
+SESSION_TTL = 300
+SESSION_MAX = 150
+MAX_CAPTCHA_BYTES = 1_200_000
+OCR_ENABLED = os.getenv("PICHAK_OCR", "0").lower() in {"1", "yes", "true"}
+
+app = Flask(__name__, static_folder=str(HERE / "static"), static_url_path="/static")
+app.json.ensure_ascii = False
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+logging.basicConfig(level=logging.INFO)
+
+
+@dataclass
+class StoredSession:
+    handler: "CBISessionHandler"
+    created: float
+
+
+SESSIONS: OrderedDict[str, StoredSession] = OrderedDict()
+SESSIONS_LOCK = threading.Lock()
+
+
+def only_digits(value):
+    return str(value or "").translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"))
+
+
+def validate_input(data):
+    sayad = only_digits(data.get("sayad_id", "")).strip()
+    due = only_digits(data.get("due_date", "")).strip()
+    amount = only_digits(data.get("amount", "")).replace(",", "").replace("٬", "").strip()
+    captcha = only_digits(data.get("captcha_answer", "")).strip()
+    if not re.fullmatch(r"\d{16}", sayad):
+        raise ValueError("شناسه صیادی باید دقیقاً ۱۶ رقم باشد.")
+    match = re.fullmatch(r"(1[34]\d{2})/(0?[1-9]|1[0-2])/(0?[1-9]|[12]\d|3[01])", due)
+    if not match:
+        raise ValueError("تاریخ سررسید باید به صورت ۱۴۰۵/۰۹/۰۳ باشد.")
+    if not re.fullmatch(r"\d{1,16}", amount) or int(amount) <= 0:
+        raise ValueError("مبلغ ریالی چک نامعتبر است.")
+    if not re.fullmatch(r"\d{1,6}", captcha):
+        raise ValueError("پاسخ کپچا باید عددی باشد.")
+    return sayad, due, amount, captcha
+
+
+def solve_simple_math_image(image_data_uri):
+    """Produce a conservative, user-verifiable OCR suggestion or None."""
+    if not OCR_ENABLED:
+        return None
+    try:
+        from captcha_math_ocr import solve
+        return solve(image_data_uri)
+    except Exception as exc:
+        app.logger.info("OCR unavailable or undecidable: %s", type(exc).__name__)
+        return None
+
+
+class CBISessionHandler:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+            "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.7",
+            "Referer": CBI_URL,
+        })
+        self.viewstate = ""
+        self.viewstate_generator = ""
+        self.event_validation = ""
+
+    @staticmethod
+    def _first_captcha_image(soup):
+        # CBI has used the misspelling "cpatcha" as an image id in some templates.
+        needle = re.compile(r"capt|cpatch|security.?code|verify.?code", re.I)
+        for img in soup.find_all("img"):
+            hint = " ".join(str(img.get(k, "")) for k in ("id", "name", "class", "alt", "title", "src", "data-src"))
+            if needle.search(hint):
+                return img
+        return None
+
+    @staticmethod
+    def _same_cbi_host(url):
+        host = (urlparse(url).hostname or "").lower()
+        return host == "cbi.ir" or host.endswith(".cbi.ir")
+
+    def _captcha_as_data_uri(self, src, page_url):
+        src = (src or "").strip()
+        if src.lower().startswith("data:image/"):
+            if ";base64," not in src.lower():
+                raise ValueError("CBI_CAPTCHA_UNSUPPORTED_DATA_URI")
+            prefix, encoded = src.split(",", 1)
+            if not re.fullmatch(r"data:image/(?:png|jpeg|jpg|gif|webp);base64", prefix, re.I):
+                raise ValueError("CBI_CAPTCHA_UNSUPPORTED_IMAGE_FORMAT")
+            if len(encoded) > MAX_CAPTCHA_BYTES * 4 // 3 + 100:
+                raise ValueError("CBI_CAPTCHA_IMAGE_TOO_LARGE")
+            try:
+                raw = base64.b64decode(encoded, validate=True)
+            except Exception as exc:
+                raise ValueError("CBI_CAPTCHA_INVALID_BASE64") from exc
+            if not raw or len(raw) > MAX_CAPTCHA_BYTES:
+                raise ValueError("CBI_CAPTCHA_IMAGE_TOO_LARGE")
+            return src
+        target = urljoin(page_url, src)
+        if not src or urlparse(target).scheme != "https" or not self._same_cbi_host(target):
+            raise ValueError("CBI_CAPTCHA_UNKNOWN_SOURCE")
+        image = self.session.get(target, timeout=(7, 20), allow_redirects=False,
+                                 headers={"Referer": page_url, "Accept": "image/avif,image/webp,image/png,image/jpeg,image/gif,*/*;q=0.8"})
+        image.raise_for_status()
+        if image.status_code in (301, 302, 303, 307, 308):
+            raise ValueError("CBI_CAPTCHA_IMAGE_REDIRECT")
+        binary = image.content
+        if not binary or len(binary) > MAX_CAPTCHA_BYTES:
+            raise ValueError("CBI_CAPTCHA_IMAGE_TOO_LARGE")
+        content_type = image.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        # Verify binary signatures; prevents accidentally returning an HTML access-denied page.
+        if binary.startswith(b"\x89PNG\r\n\x1a\n"):
+            mime = "image/png"
+        elif binary.startswith(b"\xff\xd8\xff"):
+            mime = "image/jpeg"
+        elif binary.startswith((b"GIF87a", b"GIF89a")):
+            mime = "image/gif"
+        elif binary.startswith(b"RIFF") and binary[8:12] == b"WEBP":
+            mime = "image/webp"
+        else:
+            raise ValueError("CBI_CAPTCHA_NOT_IMAGE:" + content_type[:40])
+        return f"data:{mime};base64,{base64.b64encode(binary).decode('ascii')}"
+
+    def fetch_captcha(self):
+        try:
+            response = self.session.get(CBI_URL, timeout=(7, 25))
+            response.raise_for_status()
+        except requests.Timeout as exc:
+            raise ValueError("CBI_TIMEOUT") from exc
+        except requests.HTTPError as exc:
+            code = exc.response.status_code if exc.response is not None else "UNKNOWN"
+            raise ValueError(f"CBI_HTTP_{code}") from exc
+        except requests.RequestException as exc:
+            raise ValueError("CBI_CONNECTION_ERROR") from exc
+        if not self._same_cbi_host(response.url):
+            raise ValueError("CBI_REDIRECTED_OUTSIDE_OFFICIAL_SITE")
+        soup = BeautifulSoup(response.text, "html.parser")
+        for key, field in (("__VIEWSTATE", "viewstate"), ("__VIEWSTATEGENERATOR", "viewstate_generator"), ("__EVENTVALIDATION", "event_validation")):
+            item = soup.find("input", id=key) or soup.find("input", attrs={"name": key})
+            setattr(self, field, item.get("value", "") if item else "")
+        if not self.viewstate:
+            raise ValueError("CBI_NO_VIEWSTATE")
+        captcha = self._first_captcha_image(soup)
+        if captcha is None:
+            raise ValueError("CBI_NO_CAPTCHA_IMAGE")
+        # CBI's initial <img> may have an empty src. The page includes a
+        # literal data:image/...;base64,... in an inline JavaScript call to
+        # getElementById(captcha_id).setAttribute("src", data_uri).
+        # Extract that literal instead of executing JavaScript or sending
+        # extra requests. Keep the exact HTTP session for the inquiry.
+        src = captcha.get("src") or captcha.get("data-src") or ""
+        if not src:
+            src = extract_inline_captcha_source(soup)
+        if not src:
+            raise ValueError("CBI_CAPTCHA_INLINE_NOT_FOUND")
+        return self._captcha_as_data_uri(src, response.url)
+
+    def submit_inquiry(self, sayad_id, due_date, amount, captcha_answer):
+        payload = {
+            "ctl00$ucBody$ucContent$ctl00$ScriptManager1": "ctl00$ucBody$ucContent$ctl00$UpdatePanel1|ctl00$ucBody$ucContent$ctl00$estelamBtn",
+            "ctl00$ucHeader$txtQuickSearch": "",
+            "ctl00$ucBody$ucContent$ctl00$txtSayadId": sayad_id,
+            "ctl00$ucBody$ucContent$ctl00$txtdueDate": due_date,
+            "ctl00$ucBody$ucContent$ctl00$ddlCustomerType": FIXED_CUSTOMER_TYPE,
+            "ctl00$ucBody$ucContent$ctl00$txtIdCode": FIXED_ID_CODE,
+            "ctl00$ucBody$ucContent$ctl00$txtAmount": f"{int(amount):,}",
+            "ctl00$ucBody$ucContent$ctl00$txtCaptchaInput": captcha_answer,
+            "__EVENTTARGET": "",
+            "__EVENTARGUMENT": "",
+            "__VIEWSTATE": self.viewstate,
+            "__VIEWSTATEGENERATOR": self.viewstate_generator,
+            "__VIEWSTATEENCRYPTED": "",
+            "__ASYNCPOST": "true",
+            "ctl00$ucBody$ucContent$ctl00$estelamBtn": "استعلام",
+        }
+        if self.event_validation:
+            payload["__EVENTVALIDATION"] = self.event_validation
+        response = self.session.post(CBI_URL, data=payload, headers={
+            "X-MicrosoftAjax": "Delta=true",
+            "X-Requested-With": "XMLHttpRequest",
+            "Cache-Control": "no-cache",
+        }, timeout=(7, 30))
+        response.raise_for_status()
+        return parse_cbi_response(response.text)
+
+    def close(self):
+        self.session.close()
+
+
+def parse_cbi_response(raw):
+    """Fail closed on unknown HTML or ASP.NET AJAX delta responses.
+
+    The bank page isn't a stable public API. Do NOT interpret errors or
+    unrecognized result formats as proof a check is unregistered.
+    """
+    soup = BeautifulSoup(raw, "html.parser")
+    error = soup.find("span", id="ctl00_ucBody_ucContent_ctl00_lblError")
+    if error and error.get_text(strip=True):
+        return {"success": False, "is_registered": None,
+                "message": error.get_text(" ", strip=True)[:400], "holders": []}
+    result = soup.find("div", id="ctl00_ucBody_ucContent_ctl00_divResult")
+    if result:
+        rows = result.find_all("tr")
+        holders = []
+        for row in rows:
+            cols = [td.get_text(" ", strip=True) for td in row.find_all("td")]
+            if len(cols) >= 3:
+                holders.append({"customer_type": cols[0], "id_code": cols[1], "name": cols[2]})
+        head = result.find("div", id="MenuHeader")
+        msg = head.get_text(" ", strip=True) if head else "پاسخ بانک دریافت شد."
+        if holders:
+            return {"success": True, "is_registered": True, "message": msg, "holders": holders}
+        return {"success": False, "is_registered": None,
+                "message": "پاسخ بانک دریافت شد اما فهرست گیرندگان قابل تشخیص نیست؛ نتیجه را در سایت بانک بررسی کنید.", "holders": []}
+    return {"success": False, "is_registered": None,
+            "message": "ساختار پاسخ بانک شناخته نشد؛ این نتیجه به معنی ثبت‌نشدن چک نیست.", "holders": []}
+
+
+def save_session(handler):
+    now = time.monotonic()
+    key = uuid.uuid4().hex
+    with SESSIONS_LOCK:
+        expired = [k for k, entry in SESSIONS.items() if now - entry.created > SESSION_TTL]
+        for k in expired:
+            SESSIONS.pop(k).handler.close()
+        while len(SESSIONS) >= SESSION_MAX:
+            SESSIONS.popitem(last=False)[1].handler.close()
+        SESSIONS[key] = StoredSession(handler, now)
+    return key
+
+
+def take_session(key):
+    with SESSIONS_LOCK:
+        item = SESSIONS.pop(key, None)
+    if not item:
+        return None
+    if time.monotonic() - item.created > SESSION_TTL:
+        item.handler.close()
+        return None
+    return item.handler
+
+
+@app.get("/")
+def home():
+    return send_from_directory(HERE, "index.html", mimetype="text/html")
+
+
+@app.get("/logo.png")
+def logo():
+    if not (HERE / "logo.png").is_file():
+        return "Logo is not installed", 404
+    return send_from_directory(HERE, "logo.png")
+
+
+@app.get("/api/health")
+def health():
+    return jsonify({"ok": True, "service": "pichak", "cbi_tested": False})
+
+
+@app.get("/api/captcha")
+def get_captcha():
+    handler = CBISessionHandler()
+    try:
+        src = handler.fetch_captcha()
+        ocr_result = solve_simple_math_image(src)
+        key = save_session(handler)
+        return jsonify({"success": True, "session_key": key, "captcha_src": src,
+                        "auto_answer": ocr_result["answer"] if ocr_result else None,
+                        "ocr_expression": ocr_result["expression"] if ocr_result else None,
+                        "auto_suggested": ocr_result is not None})
+    except Exception as exc:
+        handler.close()
+        error_code = str(exc) if isinstance(exc, ValueError) and str(exc).startswith("CBI_") else "CBI_UNEXPECTED_FAILURE"
+        app.logger.warning("CBI captcha unavailable: %s", error_code)
+        return jsonify({"success": False, "error_code": error_code,
+                        "message": "دریافت کپچا انجام نشد. کد خطا را در راهنمای عیب‌یابی بررسی کنید."}), 502
+
+
+@app.post("/api/inquire")
+def inquire():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "message": "بدنه درخواست JSON معتبر نیست.", "is_registered": None}), 400
+    try:
+        args = validate_input(data)
+    except ValueError as exc:
+        return jsonify({"success": False, "message": str(exc), "is_registered": None}), 400
+    session_key = data.get("session_key")
+    if not isinstance(session_key, str) or not re.fullmatch(r"[a-f0-9]{32}", session_key):
+        return jsonify({"success": False, "message": "نشست کپچا معتبر نیست.", "is_registered": None}), 400
+    handler = take_session(session_key)
+    if handler is None:
+        return jsonify({"success": False, "message": "نشست کپچا منقضی یا استفاده شده است.", "is_registered": None}), 400
+    try:
+        return jsonify(handler.submit_inquiry(*args))
+    except requests.RequestException:
+        app.logger.warning("CBI inquiry network failure")
+        return jsonify({"success": False, "is_registered": None,
+                        "message": "اتصال به بانک مرکزی قطع شد یا پاسخ به‌موقع دریافت نشد."}), 502
+    except Exception:
+        app.logger.exception("Unexpected CBI response")
+        return jsonify({"success": False, "is_registered": None,
+                        "message": "خطا در پردازش پاسخ بانک؛ نتیجه استعلام نامشخص است."}), 502
+    finally:
+        handler.close()
+
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=8088, debug=False)

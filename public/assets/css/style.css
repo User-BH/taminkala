@@ -221,6 +221,24 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .media.has-img::before, .media.has-img::after { display: none; }
 .media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
+/* ---------- سامانه‌های کارکنان ---------- */
+.portal { padding-top: 72px; }
+.portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 980px; margin: 0 auto; }
+.portal-card {
+  position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 28px 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px;
+}
+.portal-card::after { content: ''; position: absolute; left: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(207,23,37,.10), transparent 70%); pointer-events: none; }
+.portal-icon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: var(--red); color: #fff; box-shadow: 0 10px 22px rgba(207,23,37,.3); margin-bottom: 6px; }
+.portal-icon svg { width: 28px; height: 28px; }
+.portal-who { font-size: 12.5px; font-weight: 800; color: var(--muted); }
+.portal-card h3 { font-size: 20px; font-weight: 900; }
+.portal-card p { color: var(--muted); font-size: 14px; flex: 1; }
+.portal-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.portal-addr { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--line); background: var(--surface-2); color: var(--ink); border-radius: 12px; padding: 9px 12px; font-size: 13px; direction: ltr; }
+.portal-addr:hover { border-color: var(--red); }
+.portal-addr svg { width: 16px; height: 16px; color: var(--muted); }
+
 /* ---------- درباره ما ---------- */
 .about-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 60px; align-items: center; }
 .about-media { position: relative; display: grid; grid-template-columns: 1fr .8fr; gap: 16px; }
@@ -412,7 +430,7 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 @media (max-width: 560px) {
   .wrap { padding: 0 16px; }
   .brand small { display: none; }
-  .cats, .features { grid-template-columns: 1fr; }
+  .cats, .features, .portal-grid { grid-template-columns: 1fr; }
   .checks { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .float-card { font-size: 12px; padding: 10px 12px; }
