@@ -11,12 +11,12 @@
 1. zip را در `C:\` باز کنید تا `C:\TaminKala` ساخته شود.
 2. روی `install.bat` دوبار کلیک کنید (اجازه‌ی مدیر را بدهید). سرویس با ویندوز اجرا می‌شود، پورت‌ها در فایروال باز می‌شوند
    و اگر صفحه‌ی پیش‌فرض IIS پورت 80 را گرفته باشد، فقط همان سایت پیش‌فرض متوقف می‌شود.
-3. به‌روزرسانی: با هر push روی شاخه‌ی پیش‌فرض، GitHub Actions (`.github/workflows/windows-release.yml`) بسته را می‌سازد و در
-   [Releases](https://github.com/User-BH/taminkala/releases/latest) با نام `TaminKala-windows.zip` منتشر می‌کند.
-   روی سرور فایل را دانلود کنید و `update.bat` را بزنید (zip را از Downloads برمی‌دارد، سرویس را متوقف و فایل‌ها را جایگزین می‌کند).
-   با گذاشتن یک توکن فقط‌خواندنی در `data\github-token.txt`، `update.bat` خودش آخرین نسخه را دانلود می‌کند. تنظیمات در `data\` می‌ماند.
+3. به‌روزرسانی: بسته در شاخه‌ی `release` همین مخزن منتشر می‌شود (`TaminKala-windows.zip` + `VERSION.txt`)؛
+   با `bash windows/publish.sh` یا خودکار با GitHub Actions (`.github/workflows/windows-release.yml`) در هر push روی شاخه‌ی پیش‌فرض.
+   روی سرور `update.bat`: دانلود را در مرورگر (واردشده به گیت‌هاب) شروع می‌کند و در اجرای بعد zip را از Downloads نصب می‌کند.
+   با یک توکن فقط‌خواندنی در `data\github-token.txt` خودش دانلود و نصب می‌کند. تنظیمات در `data\` می‌ماند.
 
-`status.bat` وضعیت · `restart.bat` راه‌اندازی دوباره · `uninstall.bat` حذف سرویس · تنظیم پورت‌ها: `data\config.json`
+`update.bat` به‌روزرسانی · `status.bat` وضعیت · `restart.bat` راه‌اندازی دوباره · `uninstall.bat` حذف سرویس · تنظیم پورت‌ها: `data\config.json`
 
 ساخت بسته از روی مخزن (روی لینوکس/مک با اینترنت): `bash windows/build.sh` ← `dist/TaminKala-windows-<نسخه>.zip`
 کد سرور: `windows/server.py` (Waitress؛ سایت 80، پیچک 8081، بیمه 8082؛ `/ports.json` برای لینک‌های سایت).

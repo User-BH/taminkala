@@ -1,13 +1,16 @@
-# Tamin Kala Bakhtar - one-click update from GitHub Releases (run through update.bat)
-# 1) With data\github-token.txt (read-only token): downloads the latest release by itself.
-# 2) Without it: uses the newest TaminKala-windows*.zip in Downloads (downloaded from the Releases page),
-#    or opens the Releases page in the browser.
+# Tamin Kala Bakhtar - one-click update from GitHub (run through update.bat)
+# The package lives on the repository's "release" branch: TaminKala-windows.zip + VERSION.txt
+# 1) With data\github-token.txt (read-only token): downloads the latest package by itself.
+# 2) Without it: uses the newest TaminKala-windows*.zip in Downloads,
+#    or starts that download in the browser (the browser must be signed in to GitHub).
 # Then stops the service, replaces the program files (data\ and logs\ are kept) and runs install.ps1.
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $Repo   = 'User-BH/taminkala'
 $Asset  = 'TaminKala-windows.zip'
+$Branch = 'release'
+$Url    = "https://github.com/$Repo/raw/refs/heads/$Branch/$Asset"
 $Root   = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $Server = Join-Path $Root 'server.py'
 $TokenF = Join-Path $Root 'data\github-token.txt'
@@ -29,23 +32,21 @@ $zip = Join-Path $Work $Asset
 # ---- 1) get the package
 $token = if (Test-Path $TokenF) { (Get-Content $TokenF -Raw).Trim() } else { '' }
 if ($token) {
+  $h = @{ Authorization = "Bearer $token"; 'X-GitHub-Api-Version' = '2022-11-28'; Accept = 'application/vnd.github.raw' }
+  $api = "https://api.github.com/repos/$Repo/contents"
   Say "Checking the latest version on GitHub"
-  $h = @{ Authorization = "Bearer $token"; 'X-GitHub-Api-Version' = '2022-11-28' }
-  try { $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers $h -UseBasicParsing }
+  try { $latest = ([string](Invoke-RestMethod -Uri "$api/VERSION.txt?ref=$Branch" -Headers $h -UseBasicParsing)).Trim() }
   catch { Fail "GitHub did not answer ($($_.Exception.Message)). Check the internet connection or the token in data\github-token.txt." }
-  $a = $rel.assets | Where-Object { $_.name -eq $Asset } | Select-Object -First 1
-  if (-not $a) { Fail "Release $($rel.tag_name) has no $Asset." }
-  if ($current -and $rel.body -match "version: $([regex]::Escape($current))\b") { Ok "Already up to date ($($rel.tag_name))."; exit 0 }
-  Say "Downloading $($rel.tag_name) ($([math]::Round($a.size / 1MB)) MB)"
-  $h.Accept = 'application/octet-stream'
-  Invoke-WebRequest -Uri $a.url -Headers $h -OutFile $zip -UseBasicParsing
+  if ($latest -eq $current) { Ok "Already up to date ($current)."; exit 0 }
+  Say "Downloading version $latest"
+  Invoke-WebRequest -Uri "$api/$Asset`?ref=$Branch" -Headers $h -OutFile $zip -UseBasicParsing
 } else {
   $dl = Join-Path $env:USERPROFILE 'Downloads'
   $found = Get-ChildItem -Path $dl -Filter 'TaminKala-windows*.zip' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $found) {
-    Start-Process "https://github.com/$Repo/releases/latest"
-    Write-Host "  The Releases page is now open in the browser." -ForegroundColor Yellow
-    Write-Host "  Download $Asset (it goes to the Downloads folder), then run update.bat again." -ForegroundColor Yellow
+    Start-Process $Url
+    Write-Host "  The download has started in the browser (sign in to GitHub there if asked)." -ForegroundColor Yellow
+    Write-Host "  When $Asset is in the Downloads folder, run update.bat again." -ForegroundColor Yellow
     exit 0
   }
   Say "Using $($found.FullName)  ($($found.LastWriteTime))"
@@ -60,7 +61,10 @@ if (-not (Test-Path (Join-Path $new 'server.py'))) { Fail "The zip file is not a
 $newVer = (Get-Content (Join-Path $new 'VERSION.txt') -Raw).Trim()
 if ($newVer -eq $current) {
   Ok "Already up to date ($newVer)."
-  if (-not $token) { Write-Host "  For a newer version, download $Asset again from https://github.com/$Repo/releases/latest" -ForegroundColor Yellow }
+  if (-not $token) {   # the zip in Downloads is the one already installed: fetch the newest
+    Start-Process $Url
+    Write-Host "  Downloading the newest package in the browser; run update.bat again when it is in Downloads." -ForegroundColor Yellow
+  }
   exit 0
 }
 

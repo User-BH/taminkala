@@ -1,6 +1,6 @@
-# Builds the Windows package and publishes it as a GitHub Release.
-# Latest package: https://github.com/<owner>/<repo>/releases/latest  (asset: TaminKala-windows.zip)
-# On the server, update.bat downloads and applies it.
+# Builds the Windows package and publishes it on the "release" branch
+# (TaminKala-windows.zip + VERSION.txt); the server's update.bat downloads it from there.
+# The same thing can be done by hand with: bash windows/publish.sh
 name: Windows package
 
 on:
@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    # only the default branch publishes releases
+  publish:
+    # only the default branch publishes
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
@@ -29,19 +29,8 @@ jobs:
         with:
           path: .cache/windows
           key: windows-${{ hashFiles('windows/build.sh') }}
-      - name: Build
-        run: bash windows/build.sh dist
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Build and publish
         run: |
-          SHA=$(git rev-parse --short HEAD)
-          TAG="v$(date -u +%Y.%m.%d)-${{ github.run_number }}"
-          mv dist/TaminKala-windows-*.zip dist/TaminKala-windows.zip
-          gh release create "$TAG" dist/TaminKala-windows.zip \
-            --target "$GITHUB_SHA" --latest \
-            --title "نسخه $TAG ($SHA)" \
-            --notes "$(git log -1 --pretty=%B | sed '/^Co-Authored-By\|^Claude-Session/d')
-
-          نصب یا به‌روزرسانی روی سرور: روی update.bat دوبار کلیک کنید.
-          version: $SHA"
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          bash windows/publish.sh
