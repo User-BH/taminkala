@@ -32,7 +32,7 @@ PRIVATE_NETS = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", 
 # pichak_host: optional subdomain (e.g. "check.example.ir") that serves the cheque inquiry on the site port,
 # so it works behind a CDN such as ArvanCloud with HTTPS (CDNs usually pass only ports 80/443)
 DEFAULTS = {"site_port": 80, "pichak_port": 8081, "bime_port": 8082, "pichak_ocr": True, "threads": 8, "bime_allow": PRIVATE_NETS,
-            "pichak_host": ""}
+            "pichak_host": "check.tamintabriz.ir"}
 
 mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("image/webp", ".webp")
