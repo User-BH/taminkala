@@ -29,7 +29,10 @@ DATA_DIR, LOG_DIR = ROOT / "data", ROOT / "logs"
 CONFIG_FILE = DATA_DIR / "config.json"
 # bime_allow: فقط این شبکه‌ها به سامانه بیمه و حواله دسترسی دارند (شبکه داخلی شرکت و خود سرور)
 PRIVATE_NETS = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128"]
-DEFAULTS = {"site_port": 80, "pichak_port": 8081, "bime_port": 8082, "pichak_ocr": True, "threads": 8, "bime_allow": PRIVATE_NETS}
+# pichak_host: optional subdomain (e.g. "check.example.ir") that serves the cheque inquiry on the site port,
+# so it works behind a CDN such as ArvanCloud with HTTPS (CDNs usually pass only ports 80/443)
+DEFAULTS = {"site_port": 80, "pichak_port": 8081, "bime_port": 8082, "pichak_ocr": True, "threads": 8, "bime_allow": PRIVATE_NETS,
+            "pichak_host": ""}
 
 mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("image/webp", ".webp")
@@ -48,6 +51,7 @@ def load_config() -> dict:
         cfg[k] = int(cfg[k])
     if len({cfg["site_port"], cfg["pichak_port"], cfg["bime_port"]}) != 3:
         raise SystemExit("config.json: the three ports must be different")
+    cfg["pichak_host"] = str(cfg.get("pichak_host") or "").strip().lower().rstrip(".")
     cfg["_bime_nets"] = [ipaddress.ip_network(n, strict=False) for n in cfg.get("bime_allow") or PRIVATE_NETS]
     return cfg
 
@@ -184,7 +188,7 @@ def build(cfg, log):
 
     def site_app(environ, start_response):
         if environ.get("PATH_INFO") == "/ports.json":   # «internal» برای نمایش یا قفل کارت بیمه در سایت
-            body = json.dumps({"pichak": cfg["pichak_port"], "bime": cfg["bime_port"],
+            body = json.dumps({"pichak": cfg["pichak_port"], "bime": cfg["bime_port"], "pichak_host": cfg["pichak_host"],
                                "internal": client_allowed(environ, cfg["_bime_nets"])}).encode()
             start_response("200 OK", [("Content-Type", "application/json"), ("Cache-Control", "no-store"), ("Content-Length", str(len(body)))])
             return [body]
@@ -201,13 +205,17 @@ def build(cfg, log):
             return _internal_only(start_response)
         return bime(environ, start_response)
 
+    pichak = pichak_app(cfg, log)
     apps = {
         cfg["site_port"]: site_app,
-        cfg["pichak_port"]: pichak_app(cfg, log),
+        cfg["pichak_port"]: pichak,
         cfg["bime_port"]: bime_app,
     }
 
     def dispatch(environ, start_response):
+        host = (environ.get("HTTP_HOST") or "").split(":")[0].strip().lower().rstrip(".")
+        if cfg["pichak_host"] and host == cfg["pichak_host"]:
+            return pichak(environ, start_response)
         app = apps.get(int(environ.get("SERVER_PORT") or 0))
         if app is None:
             return _not_found(start_response)
@@ -222,8 +230,8 @@ def main():
     from waitress import serve
     # فقط IPv4: روی سرورهایی که IPv6 خاموش است «*» باعث خطای شروع می‌شود
     listen = " ".join(f"0.0.0.0:{cfg[k]}" for k in ("site_port", "pichak_port", "bime_port"))
-    log.info("starting: site=%s pichak=%s bime=%s (bime allowed from %s)", cfg["site_port"], cfg["pichak_port"], cfg["bime_port"],
-             ", ".join(map(str, cfg["_bime_nets"])))
+    log.info("starting: site=%s pichak=%s bime=%s (bime allowed from %s)%s", cfg["site_port"], cfg["pichak_port"], cfg["bime_port"],
+             ", ".join(map(str, cfg["_bime_nets"])), f"; pichak also at http(s)://{cfg['pichak_host']}/" if cfg["pichak_host"] else "")
     serve(build(cfg, log), listen=listen, threads=int(cfg.get("threads", 8)), ident="TaminKala",
           channel_timeout=130)   # استعلام بانک مرکزی ممکن است طول بکشد
 

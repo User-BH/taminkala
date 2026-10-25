@@ -36,6 +36,15 @@ ol li{margin:6px 0}.muted{color:#6f6a6b;font-size:13px}
 <p><b>به‌روزرسانی کاملاً خودکار (اختیاری):</b> در گیت‌هاب از Settings → Developer settings → Fine-grained tokens یک توکن فقط برای مخزن taminkala با دسترسی <code>Contents: Read-only</code> بسازید و آن را در فایل <code>data\github-token.txt</code> بگذارید. از آن به بعد با یک بار زدن update.bat آخرین نسخه خودش دانلود و نصب می‌شود (اگر نسخه‌ی نصب‌شده جدیدترین باشد، چیزی تغییر نمی‌کند).</p>
 <p class="muted">تنظیمات (<code>data</code>) و گزارش‌ها (<code>logs</code>) با به‌روزرسانی دست نمی‌خورند.</p></div>
 
+<div class="card"><h2>دامنه و SSL با ابرآروان</h2><ol>
+<li>در ابرآروان برای دامنه رکورد A بسازید: <code>@</code> (و <code>www</code>) به IP سرور، با ابر روشن.</li>
+<li>برای استعلام چک یک زیردامنه هم بسازید، مثلاً <code>check</code> به همان IP، با ابر روشن.</li>
+<li>در فایل <code>data\config.json</code> این خط را اضافه کنید: <code>"pichak_host": "check.دامنه‌ی-شما"</code> و <kbd>restart.bat</kbd> را بزنید.</li>
+<li>در ابرآروان، بخش HTTPS را روشن کنید (گواهی رایگان)، اتصال به سرور اصلی (مبدا) را روی <b>HTTP</b> بگذارید (روی سرور گواهی SSL نیست) و انتقال خودکار به HTTPS را فعال کنید.</li>
+</ol>
+<p>سایت: <code>https://دامنه</code> · استعلام چک: <code>https://check.دامنه</code> (لینک‌های سایت خودکار به همین نشانی می‌روند).</p>
+<p class="muted">بیمه و حواله را از پشت ابرآروان باز نکنید؛ فقط داخل شرکت با <code>http://192.168.2.2:8082</code>. با دامنه، کارت آن در سایت پنهان است.</p></div>
+
 <div class="card"><h2>کارهای روزمره</h2>
 <p><kbd>update.bat</kbd> به‌روزرسانی · <kbd>status.bat</kbd> وضعیت سه بخش و آخرین خطاها · <kbd>restart.bat</kbd> راه‌اندازی دوباره · <kbd>uninstall.bat</kbd> حذف سرویس و قانون فایروال (فایل‌ها می‌مانند)</p>
 <p>تغییر پورت‌ها: فایل <code>data\config.json</code> را با Notepad باز کنید، عدد پورت را عوض کنید و <kbd>install.bat</kbd> را دوباره اجرا کنید.</p>

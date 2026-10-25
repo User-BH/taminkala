@@ -119,17 +119,21 @@
   }
 
   /* ---------- سامانه‌های کارکنان: نشانی = همین سرور + پورت هر سامانه ---------- */
-  var PORTS = { pichak: 8081, bime: 8082 };
-  function portalUrl(name) { return location.protocol + '//' + location.hostname + ':' + PORTS[name] + '/'; }
+  var PORTS = { pichak: 8081, bime: 8082 }, HOSTS = {};
+  // روی دامنه (پشت ابرآروان) استعلام چک از زیردامنه‌ی خودش باز می‌شود؛ با IP از پورت خودش
+  var onDomain = !/^(\d+\.){3}\d+$|^\[|^localhost$/.test(location.hostname);
+  function portalAddr(name) { return onDomain && HOSTS[name] ? HOSTS[name] : location.hostname + ':' + PORTS[name]; }
+  function portalUrl(name) { return location.protocol + '//' + portalAddr(name) + '/'; }
   function paintPortal() {
     document.querySelectorAll('[data-portal]').forEach(function (a) { a.href = portalUrl(a.getAttribute('data-portal')); });
-    document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = location.hostname + ':' + PORTS[s.getAttribute('data-addr')]; });
+    document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = portalAddr(s.getAttribute('data-addr')); });
   }
   paintPortal();
   if (window.fetch) fetch('/ports.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
     .then(function (p) {
       if (!p) return;
       ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; });
+      if (p.pichak_host) HOSTS.pichak = p.pichak_host;
       paintPortal();
       // سامانه‌های داخلی (بیمه و حواله) بیرون از شبکه شرکت اصلاً نشان داده نمی‌شوند
       if (p.internal === false) document.querySelectorAll('[data-internal]').forEach(function (el) {

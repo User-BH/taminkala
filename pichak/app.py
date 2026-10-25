@@ -394,6 +394,13 @@ def take_session(key):
     return item.handler
 
 
+@app.after_request
+def no_store(response):
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, private"
+    return response
+
+
 @app.get("/")
 def home():
     return send_from_directory(HERE, "index.html", mimetype="text/html")
