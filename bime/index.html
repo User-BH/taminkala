@@ -120,12 +120,12 @@ tr.dim td{opacity:.55}
 </div>
 <p class="tiny" style="margin:14px 0 0">مأخذ بیمه و سهم کارگر از اکسل حقوق استخراج می‌شوند و دوباره محاسبه نمی‌شوند؛ اطلاعات هویتی از بانک پرسنل می‌آیند.</p>
 <details class="help" id="karBox" style="margin-top:14px"><summary>مشخصات کارگاه برای فایل DSKKAR00</summary><div class="grid4" style="margin-top:10px">
-<div class="field" style="grid-column:span 2"><label for="karName">نام کارگاه</label><input id="karName" maxlength="40"></div>
-<div class="field" style="grid-column:span 2"><label for="karFarm">نام کارفرما</label><input id="karFarm" maxlength="40"></div>
-<div class="field" style="grid-column:span 2"><label for="karAdrs">نشانی کارگاه</label><input id="karAdrs" maxlength="50"></div>
+<div class="field" style="grid-column:span 2"><label for="karName">نام کارگاه</label><input id="karName" maxlength="30"></div>
+<div class="field" style="grid-column:span 2"><label for="karFarm">نام کارفرما</label><input id="karFarm" maxlength="30"></div>
+<div class="field" style="grid-column:span 2"><label for="karAdrs">نشانی کارگاه</label><input id="karAdrs" maxlength="40"></div>
 <div class="field"><label for="karPym">ردیف پیمان</label><input id="karPym" dir="ltr" inputmode="numeric" maxlength="3" placeholder="لیست اصلی: خالی"></div>
 <div class="field"><label for="karDisc">شرح لیست</label><input id="karDisc" dir="ltr" maxlength="30"></div>
-</div><p class="tiny" style="margin:10px 0 0">ردیف پیمان و شرح لیست با انتخاب شیت خودکار پر می‌شوند (شیت «پیمان»: ردیف 001 و شرح 1؛ لیست اصلی: ردیف خالی و شرح 2، مطابق فایل‌های قبلی تبریز). نام، کارفرما و نشانی برای هر شعبه در همین مرورگر ذخیره می‌شوند.</p></details>
+</div><p class="tiny" style="margin:10px 0 0">ردیف پیمان و شرح لیست با انتخاب شیت خودکار پر می‌شوند (شیت «پیمان»: ردیف 001 و شرح 1؛ لیست اصلی: ردیف خالی و شرح 2 در تبریز و 0 در اردبیل، مطابق فایل‌های قبلی). نام، کارفرما و نشانی برای هر شعبه در همین مرورگر ذخیره می‌شوند؛ حداکثر طول: نام و کارفرما ۳۰ و نشانی ۴۰ حرف.</p></details>
 </section>
 <div class="stepnav"><button type="button" class="secondary" data-go="1">مرحله قبل</button><button type="button" class="btn" data-go="3">بررسی و خروجی</button></div>
 </div>
@@ -815,13 +815,14 @@ paintMatch();
   // پیش‌فرض‌های هر شعبه (قابل ویرایش؛ تغییرات در مرورگر ذخیره می‌شود)
   const KAR_DEFAULTS = {
     tabriz:  { name: 'شرکت تامین کالا باختر', farm: 'آقای میرقدیر شهلائی', adrs: 'تبریز -جاده آذرشهر -شهرک صنعتی غرب' },
-    ardabil: { name: 'شرکت تامین کالا باختر', farm: 'آقای میرقدیر شهلائی', adrs: '' },
+    ardabil: { name: 'شرکت تامین کالا باختر', farm: 'سیدقدیرشهلائی نمین', adrs: '۴شهرک صنعتی شماره یک انتهای خیابان شمشاد' },   // از DSKKAR00 مهر ۱۴۰۵؛ «۴» رقم فارسی است
   };
   const key = () => 'bime-kar-' + ($('branch').value || 'tabriz');
   const load = () => { try { return JSON.parse(localStorage.getItem(key())) || null } catch (e) { return null } };
   const save = () => { try { localStorage.setItem(key(), JSON.stringify({ name: $('karName').value, farm: $('karFarm').value, adrs: $('karAdrs').value })) } catch (e) {} };
   function fillBranch() { const v = load() || KAR_DEFAULTS[$('branch').value] || KAR_DEFAULTS.tabriz; $('karName').value = v.name; $('karFarm').value = v.farm; $('karAdrs').value = v.adrs; }
-  function fillSheet() { const contract = /پیمان/.test($('sheetSelect').value || ''); $('karPym').value = contract ? '001' : ''; $('karDisc').value = contract ? '1' : '2'; }
+  // شرح لیست در فایل‌های رسمی: تبریز اصلی 2 و پیمانی 1، اردبیل 0
+  function fillSheet() { const contract = /پیمان/.test($('sheetSelect').value || ''); $('karPym').value = contract ? '001' : ''; $('karDisc').value = contract ? '1' : ($('branch').value === 'ardabil' ? '0' : '2'); }
 
   function header() { const b = atob(KAR_HEADER_B64), h = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) h[i] = b.charCodeAt(i); return h; }
   function buildRecord() {
@@ -860,7 +861,7 @@ paintMatch();
   }
   $('karBtn').addEventListener('click', exportKar);
   new MutationObserver(() => { $('karBtn').disabled = $('exportBtn').disabled; }).observe($('exportBtn'), { attributes: true, attributeFilter: ['disabled'] });
-  $('branch').addEventListener('change', fillBranch);
+  $('branch').addEventListener('change', () => { fillBranch(); fillSheet(); });
   $('sheetSelect').addEventListener('change', fillSheet);
   new MutationObserver(fillSheet).observe($('sheetSelect'), { childList: true });
   for (const id of ['karName', 'karFarm', 'karAdrs']) $(id).addEventListener('change', save);
