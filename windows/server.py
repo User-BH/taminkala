@@ -141,6 +141,7 @@ def static_app(root: Path, extra_roots: dict[str, Path] | None = None, extra_fil
 # ---------------------------------------------------------------- pichak
 def pichak_app(cfg, log):
     os.environ["PICHAK_OCR"] = "1" if cfg.get("pichak_ocr", True) else "0"
+    os.environ.setdefault("PICHAK_DUMP_DIR", str(LOG_DIR / "cbi"))   # unrecognized bank answers, for support
     sys.path.insert(0, str(PICHAK_DIR))
     try:
         from app import app as flask_app   # pichak/app.py

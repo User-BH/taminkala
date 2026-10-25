@@ -129,7 +129,6 @@ sudo taminkala doctor
 | `public/assets/img/photos/cat-detergent.jpg` | شوینده (۴:۳) |
 | `public/assets/img/photos/cat-beverage.jpg` | نوشیدنی (۴:۳) |
 | `public/assets/img/photos/gallery-1.jpg` … `gallery-4.jpg` | گالری |
-| `public/assets/img/photos/map.jpg` | تصویر نقشه |
 | `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | بنر برندهای همکار (عمودی برای اولی، افقی برای دو تای دیگر) |
 
 عکس‌ها را قبل از آپلود فشرده کنید (حداکثر ~۳۰۰KB؛ jpg یا webp).

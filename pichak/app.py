@@ -92,6 +92,7 @@ class CBISessionHandler:
         self.viewstate = ""
         self.viewstate_generator = ""
         self.event_validation = ""
+        self.baseline = frozenset()   # text of the empty form, to tell the bank's answer apart
 
     @staticmethod
     def _first_captcha_image(soup):
@@ -164,6 +165,7 @@ class CBISessionHandler:
         if not self._same_cbi_host(response.url):
             raise ValueError("CBI_REDIRECTED_OUTSIDE_OFFICIAL_SITE")
         soup = BeautifulSoup(response.text, "html.parser")
+        self.baseline = frozenset(page_texts(response.text))
         for key, field in (("__VIEWSTATE", "viewstate"), ("__VIEWSTATEGENERATOR", "viewstate_generator"), ("__EVENTVALIDATION", "event_validation")):
             item = soup.find("input", id=key) or soup.find("input", attrs={"name": key})
             setattr(self, field, item.get("value", "") if item else "")
@@ -210,39 +212,121 @@ class CBISessionHandler:
             "Cache-Control": "no-cache",
         }, timeout=(7, 30))
         response.raise_for_status()
-        return parse_cbi_response(response.text)
+        return parse_cbi_response(response.text, self.baseline)
 
     def close(self):
         self.session.close()
 
 
-def parse_cbi_response(raw):
-    """Fail closed on unknown HTML or ASP.NET AJAX delta responses.
+_FA_NORM = str.maketrans({"ي": "ی", "ك": "ک", "\u200c": " ", "\u200f": "", "\u200e": "", "\xa0": " "})
+_FA_LITERAL = re.compile(r"""(['"])((?:(?!\1)[^\\\n]|\\.)*?[\u0600-\u06FF](?:(?!\1)[^\\\n]|\\.)*?)\1""")
+NOT_REGISTERED = ("ثبت نشده", "ثبت نگردیده", "ثبت نشد")
+UNCERTAIN = ("کد امنیتی", "کد تصویر", "کپچا", "captcha", "منقضی", "مجدد", "خطا", "نامعتبر", "اشتباه",
+             "صحیح نیست", "صحیح نمی", "مطابقت ندارد", "مطابقت نداشت", "مغایرت", "یافت نشد", "وجود ندارد")
+REGISTERED = ("ثبت شده", "ثبت شد", "ثبت گردیده", "ثبت گردید")
+DUMP_DIR = Path(os.getenv("PICHAK_DUMP_DIR") or HERE / "logs" / "cbi")
+DUMP_KEEP = 30
 
-    The bank page isn't a stable public API. Do NOT interpret errors or
-    unrecognized result formats as proof a check is unregistered.
+
+def _norm(text):
+    return re.sub(r"\s+", " ", str(text).translate(_FA_NORM)).strip()
+
+
+def _delta_parts(raw):
+    """ASP.NET AJAX partial response: «length|type|id|content|» repeated. None if raw is not one."""
+    parts, i = [], 0
+    while i < len(raw):
+        j = raw.find("|", i)
+        k = raw.find("|", j + 1) if j >= 0 else -1
+        m = raw.find("|", k + 1) if k >= 0 else -1
+        if m < 0 or not raw[i:j].isdigit():
+            return None
+        n = int(raw[i:j])
+        parts.append((raw[j + 1:k], raw[k + 1:m], raw[m + 1:m + 1 + n]))
+        i = m + 1 + n + 1
+    return parts or None
+
+
+def page_texts(html):
+    """Visible text pieces of an HTML fragment and the Persian string literals of its scripts (alert/swal...)."""
+    soup = BeautifulSoup(html, "html.parser")
+    literals = [_norm(m.group(2)) for tag in soup.find_all("script") for m in _FA_LITERAL.finditer(tag.get_text())]
+    for tag in soup(["script", "style", "select", "noscript"]):
+        tag.decompose()
+    return [_norm(t) for t in soup.stripped_strings] + literals
+
+
+def _holder_rows(html, baseline):
+    holders = []
+    for row in BeautifulSoup(html, "html.parser").find_all("tr"):
+        cols = [_norm(td.get_text(" ", strip=True)) for td in row.find_all("td")]
+        # a holder row carries a national/company id; layout rows of the form never do
+        if len(cols) >= 3 and re.fullmatch(r"\d{8,12}", only_digits(cols[1])) and not all(c in baseline for c in cols):
+            holders.append({"customer_type": cols[0], "id_code": cols[1], "name": cols[2]})
+    return holders
+
+
+def _dump(raw, reason):
+    """Keep unrecognized bank answers on this server (never sent anywhere) so the parser can be improved."""
+    try:
+        DUMP_DIR.mkdir(parents=True, exist_ok=True)
+        cleaned = re.sub(r'(<input[^>]+name="__(?:VIEWSTATE|EVENTVALIDATION)[^"]*"[^>]*value=")[^"]*', r"\1", raw)
+        cleaned = re.sub(r"(\d+\|hiddenField\|__(?:VIEWSTATE|EVENTVALIDATION)\|)[^|]*", r"\1", cleaned)
+        name = DUMP_DIR / f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}-{reason}.txt"
+        name.write_text(cleaned, encoding="utf-8")
+        for old in sorted(DUMP_DIR.glob("*.txt"))[:-DUMP_KEEP]:
+            old.unlink()
+        app.logger.warning("Unrecognized CBI answer saved to %s", name)
+    except OSError:
+        app.logger.exception("Could not save the CBI answer")
+
+
+def parse_cbi_response(raw, baseline=frozenset()):
+    """Classify the bank's answer; fail closed.
+
+    The bank page isn't a stable public API, so element ids are not relied on: the answer is the
+    text that appears in the response but was not on the empty form (``baseline``). A check is
+    reported registered/unregistered only on explicit wording; anything else is shown as the
+    bank's own message with is_registered None. Errors are never read as "unregistered".
     """
-    soup = BeautifulSoup(raw, "html.parser")
-    error = soup.find("span", id="ctl00_ucBody_ucContent_ctl00_lblError")
-    if error and error.get_text(strip=True):
-        return {"success": False, "is_registered": None,
-                "message": error.get_text(" ", strip=True)[:400], "holders": []}
-    result = soup.find("div", id="ctl00_ucBody_ucContent_ctl00_divResult")
-    if result:
-        rows = result.find_all("tr")
-        holders = []
-        for row in rows:
-            cols = [td.get_text(" ", strip=True) for td in row.find_all("td")]
-            if len(cols) >= 3:
-                holders.append({"customer_type": cols[0], "id_code": cols[1], "name": cols[2]})
-        head = result.find("div", id="MenuHeader")
-        msg = head.get_text(" ", strip=True) if head else "پاسخ بانک دریافت شد."
-        if holders:
-            return {"success": True, "is_registered": True, "message": msg, "holders": holders}
-        return {"success": False, "is_registered": None,
-                "message": "پاسخ بانک دریافت شد اما فهرست گیرندگان قابل تشخیص نیست؛ نتیجه را در سایت بانک بررسی کنید.", "holders": []}
-    return {"success": False, "is_registered": None,
-            "message": "ساختار پاسخ بانک شناخته نشد؛ این نتیجه به معنی ثبت‌نشدن چک نیست.", "holders": []}
+    parts = _delta_parts(raw)
+    if parts is None:
+        fragments, scripts = [raw], []
+    else:
+        for typ, _pid, content in parts:
+            if typ == "error":
+                return {"success": False, "is_registered": None, "holders": [],
+                        "message": "بانک خطا برگرداند: " + _norm(content)[:300]}
+            if typ == "pageRedirect":
+                return {"success": False, "is_registered": None, "holders": [],
+                        "message": "بانک صفحه را به نشانی دیگری فرستاد؛ نتیجه را در سامانه رسمی بررسی کنید."}
+        fragments = [c for t, _i, c in parts if t == "updatePanel"]
+        scripts = [c for t, _i, c in parts if t.startswith("scriptBlock") or t.startswith("ScriptContent")
+                   or t == "scriptStartupBlock" or t == "onSubmit"]
+    texts = [t for f in fragments for t in page_texts(f)]
+    texts += [_norm(m.group(2)) for js in scripts for m in _FA_LITERAL.finditer(js)]
+    seen, answer = set(baseline), []
+    for t in texts:
+        if len(t) > 1 and t not in seen:
+            seen.add(t)
+            answer.append(t)
+    holders = [h for f in fragments for h in _holder_rows(f, baseline)]
+    message = " · ".join(answer)[:500]
+    low = message.lower()
+
+    if any(w in low for w in NOT_REGISTERED) and not any(w in low for w in UNCERTAIN):
+        return {"success": True, "is_registered": False, "message": message, "holders": []}
+    if any(w in low for w in UNCERTAIN):
+        return {"success": False, "is_registered": None, "message": "پیام بانک: " + message, "holders": []}
+    if any(w in low for w in REGISTERED) or holders:
+        return {"success": True, "is_registered": True, "message": message or "ثبت چک توسط بانک مرکزی تأیید شد.",
+                "holders": holders}
+    _dump(raw, "unknown")
+    if message:
+        return {"success": False, "is_registered": None, "holders": [],
+                "message": "پیام بانک: " + message + " — نتیجه خودکار تشخیص داده نشد؛ متن بالا پاسخ خود بانک است."}
+    return {"success": False, "is_registered": None, "holders": [],
+            "message": "پاسخ بانک متن قابل نمایشی نداشت؛ این به معنی ثبت‌نشدن چک نیست. در سامانه رسمی بررسی کنید."}
 
 
 def save_session(handler):
