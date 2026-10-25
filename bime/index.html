@@ -119,13 +119,20 @@ tr.dim td{opacity:.55}
 <div class="field"><label for="month">ماه لیست</label><select id="month"><option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option><option value="4">تیر</option><option value="5">مرداد</option><option value="6" selected>شهریور</option><option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option><option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option></select></div>
 </div>
 <p class="tiny" style="margin:14px 0 0">مأخذ بیمه و سهم کارگر از اکسل حقوق استخراج می‌شوند و دوباره محاسبه نمی‌شوند؛ اطلاعات هویتی از بانک پرسنل می‌آیند.</p>
+<details class="help" id="karBox" style="margin-top:14px"><summary>مشخصات کارگاه برای فایل DSKKAR00</summary><div class="grid4" style="margin-top:10px">
+<div class="field" style="grid-column:span 2"><label for="karName">نام کارگاه</label><input id="karName" maxlength="40"></div>
+<div class="field" style="grid-column:span 2"><label for="karFarm">نام کارفرما</label><input id="karFarm" maxlength="40"></div>
+<div class="field" style="grid-column:span 2"><label for="karAdrs">نشانی کارگاه</label><input id="karAdrs" maxlength="50"></div>
+<div class="field"><label for="karPym">ردیف پیمان</label><input id="karPym" dir="ltr" inputmode="numeric" maxlength="3" placeholder="لیست اصلی: خالی"></div>
+<div class="field"><label for="karDisc">شرح لیست</label><input id="karDisc" dir="ltr" maxlength="30"></div>
+</div><p class="tiny" style="margin:10px 0 0">ردیف پیمان و شرح لیست با انتخاب شیت خودکار پر می‌شوند (شیت «پیمان»: ردیف 001 و شرح 1؛ لیست اصلی: ردیف خالی و شرح 2، مطابق فایل‌های قبلی تبریز). نام، کارفرما و نشانی برای هر شعبه در همین مرورگر ذخیره می‌شوند.</p></details>
 </section>
 <div class="stepnav"><button type="button" class="secondary" data-go="1">مرحله قبل</button><button type="button" class="btn" data-go="3">بررسی و خروجی</button></div>
 </div>
 
 <div class="step" data-step="3" hidden>
 <div class="stats"><div class="metric"><span>افراد لیست حقوق</span><strong id="statPayroll">۰</strong></div><div class="metric green"><span>تطبیق صحیح و فعال</span><strong id="statMatched">۰</strong></div><div class="metric red"><span>نیازمند رسیدگی</span><strong id="statProblems">۰</strong></div><div class="metric amber"><span>افراد بانک خارج از لیست ماه</span><strong id="statUnused">۰</strong></div></div>
-<div class="footer-actions top-actions"><div><strong id="exportTitle">منتظر دو اکسل</strong><div class="tiny" id="exportHint">پس از رفع اشکالات، فایل خروجی فعال می‌شود.</div></div><button type="button" class="btn" id="exportBtn" disabled>دریافت DSKWOR00.dbf</button></div>
+<div class="footer-actions top-actions"><div><strong id="exportTitle">منتظر دو اکسل</strong><div class="tiny" id="exportHint">پس از رفع اشکالات، فایل خروجی فعال می‌شود.</div></div><div class="actions"><button type="button" class="btn" id="exportBtn" disabled>دریافت DSKWOR00.dbf</button><button type="button" class="btn" id="karBtn" disabled>دریافت DSKKAR00.dbf</button></div></div>
 <section class="panel table-panel"><div class="table-header"><div><h2>تطبیق دو اکسل و مبالغ</h2><div class="tiny" id="matchSubtitle">پس از انتخاب هر دو اکسل، نتایج اینجا ظاهر می‌شود.</div></div><div class="table-tools"><input class="search" type="search" id="search" placeholder="جستجوی نام یا کد ملی"><div class="seg"><button id="filterAll" type="button" class="active">همه</button><button id="filterProblems" type="button">فقط مشکلات</button></div><button id="reportBtn" type="button" class="secondary" disabled>دانلود گزارش خطا</button></div></div>
 <div id="issuesBox" class="soft" style="margin:0 20px 14px" hidden><strong id="issuesTitle"></strong><div id="issuesLines"></div></div>
 <div class="tblwrap results-table"><table><thead><tr><th>ردیف</th><th>نام در اکسل حقوق</th><th>وضعیت تطبیق</th><th>شماره بیمه</th><th>کد ملی</th><th>شغل</th><th>روز کارکرد</th><th>مأخذ بیمه (ریال)</th><th>سهم کارگر (ریال)</th><th>جزئیات</th></tr></thead><tbody id="matchedRows"><tr><td colspan="10" class="empty">هنوز دو فایل انتخاب نشده‌اند.</td></tr></tbody></table></div>
@@ -320,7 +327,7 @@ function extractPayRows(){if(!work)return[];const s=work.find(s=>s.name===$('she
  const tot=get('جمع پرداختيها فیش','جمع پرداختیها فیش','جمع کل دستمزد و مزایا');
  if(tot==='')warn.push('جمع پرداختی‌ها در اکسل نیست؛ از مأخذ بیمه به عنوان جمع کل استفاده خواهد شد.');
  const po={_sourceName:full,_row:i+2,_errors:errors,_warnings:warn,_national:codeOf(get('کد ملی','کدملی')),_insurance:codeOf(get('شماره بیمه')),
- DSW_DD:number(dd),DSW_ROOZ:number(daily),DSW_MAH:monthly,DSW_MASH:number(insured),DSW_MAZ:number(insured)-monthly,DSW_TOTL:tot!==''?number(tot):number(insured),DSW_BIME:number(insurance),DSW_INC:number(get('پایه سنوات تجمیعی روزانه')),DSW_SPOUSE:String(number(get('حق تاهل قابل پرداخت'))),DSW_PRATE:0, _year:yy,_month:mm};
+ DSW_DD:number(dd),DSW_ROOZ:number(daily),DSW_MAH:monthly,DSW_MASH:number(insured),DSW_MAZ:number(insured)-monthly,DSW_TOTL:tot!==''?number(tot):number(insured),DSW_BIME:number(insurance),DSW_INC:number(get('پایه سنوات تجمیعی روزانه')),DSW_SPOUSE:String(number(get('حق تاهل قابل پرداخت'))),DSW_PRATE:0, _year:yy,_month:mm,_mostamar:get('مستمر + تاهل','مستمر+تاهل')};
  if(po.DSW_MAZ<0)errors.push('مأخذ بیمه از دستمزد پایه کمتر است؛ فرمول حقوق بررسی شود');
  if(!Number.isInteger(po.DSW_DD)||po.DSW_DD<0||po.DSW_DD>31)errors.push('روز کارکرد باید بین صفر و ۳۱ باشد');
  if(po.DSW_MASH!==po.DSW_MAH+po.DSW_MAZ)errors.push('جمع مأخذ بیمه برابر با اجزا نیست');
@@ -788,6 +795,76 @@ paintMatch();
   $('kmUser').value = load(K_USER, '') || '';
   applyBranch(branchKey, false);
   window.__karamad = { j2g, parseJalali };   // برای تست
+})();
+</script>
+<script>
+/* فایل اطلاعات کارگاه DSKKAR00 — جمع‌های لیست + مشخصات کارگاه. طراحی و توسعه: شرکت رهوار پیوند داده
+   از متغیرهای عمومی صفحه استفاده می‌کند: linkRows, fieldBytes, parseDbf, number, digits, codeOf, download, notify */
+(function(){
+  const $ = id => document.getElementById(id);
+  const KAR_HEADER_B64 = 'AwcICAEAAABBAzcBAAAAAAAAAAAAAAAAAAAAAAB+AABEU0tfSUQAAAAAAEMAAAAACgAAAAAAAAAAAAAAAAAAAERTS19OQU1FAAAAQwAAAAAeAAAAAAAAAAAAAAAAAAAARFNLX0ZBUk0AAABDAAAAAB4AAAAAAAAAAAAAAAAAAABEU0tfQURSUwAAAEMAAAAAKAAAAAAAAAAAAAAAAAAAAERTS19LSU5EAAAATgAAAAABAAAAAAAAAAAAAAAAAAAARFNLX1lZAAAAAABOAAAAAAIAAAAAAAAAAAAAAAAAAABEU0tfTU0AAAAAAE4AAAAAAgAAAAAAAAAAAAAAAAAAAERTS19MSVNUTk8AQwAAAAAMAAAAAAAAAAAAAAAAAAAARFNLX0RJU0MAAABDAAAAAB4AAAAAAAAAAAAAAAAAAABEU0tfTlVNAAAAAE4AAAAABQAAAAAAAAAAAAAAAAAAAERTS19UREQAAAAATgAAAAAGAAAAAAAAAAAAAAAAAAAARFNLX1RST09aAABOAAAAAAwAAAAAAAAAAAAAAAAAAABEU0tfVE1BSAAAAE4AAAAADAAAAAAAAAAAAAAAAAAAAERTS19UTUFaAAAATgAAAAAMAAAAAAAAAAAAAAAAAAAARFNLX1RNQVNIAABOAAAAAAwAAAAAAAAAAAAAAAAAAABEU0tfVFRPVEwAAE4AAAAADAAAAAAAAAAAAAAAAAAAAERTS19UQklNRQAATgAAAAAMAAAAAAAAAAAAAAAAAAAARFNLX1RLT1NPAABOAAAAAAwAAAAAAAAAAAAAAAAAAABEU0tfQklDAAAAAE4AAAAADAAAAAAAAAAAAAAAAAAAAERTS19SQVRFAAAATgAAAAAFAAAAAAAAAAAAAAAAAAAARFNLX1BSQVRFAABOAAAAAAIAAAAAAAAAAAAAAAAAAABEU0tfQklNSAAAAE4AAAAADAAAAAAAAAAAAAAAAAAAAE1PTl9QWU0AAAAAQwAAAAADAAAAAAAAAAAAAAAAAAAARFNLX0lOQwAAAABOAAAAAAwAAAAAAAAAAAAAAAAAAABEU0tfU1BPVVNFAE4AAAAADAAAAAAAAAAAAAAAAAAAAA0=';
+  const KAR_SCHEMA = [
+    ['DSK_ID','C',10,'کد کارگاه'],['DSK_NAME','C',30,'نام کارگاه'],['DSK_FARM','C',30,'نام کارفرما'],['DSK_ADRS','C',40,'نشانی کارگاه'],
+    ['DSK_KIND','N',1,'نوع لیست'],['DSK_YY','N',2,'سال'],['DSK_MM','N',2,'ماه'],['DSK_LISTNO','C',12,'شماره لیست'],['DSK_DISC','C',30,'شرح لیست'],
+    ['DSK_NUM','N',5,'تعداد کارکنان'],['DSK_TDD','N',6,'جمع روزهای کارکرد'],['DSK_TROOZ','N',12,'جمع دستمزد روزانه'],['DSK_TMAH','N',12,'جمع دستمزد ماهانه'],
+    ['DSK_TMAZ','N',12,'جمع مزایای مستمر'],['DSK_TMASH','N',12,'جمع مأخذ بیمه'],['DSK_TTOTL','N',12,'جمع کل پرداختی'],['DSK_TBIME','N',12,'جمع سهم بیمه‌شده'],
+    ['DSK_TKOSO','N',12,'جمع سهم کارفرما'],['DSK_BIC','N',12,'جمع بیمه بیکاری'],['DSK_RATE','N',5,'نرخ'],['DSK_PRATE','N',2,'نرخ پورسانتاژ'],['DSK_BIMH','N',12,'حق بیمه پورسانتاژ'],
+    ['MON_PYM','C',3,'ردیف پیمان'],['DSK_INC','N',12,'جمع پایه سنوات ماهانه'],['DSK_SPOUSE','N',12,'جمع حق تأهل']
+  ].map(([name,type,len,label]) => ({ name, type, len, label }));
+  const REC_LEN = 1 + KAR_SCHEMA.reduce((a, f) => a + f.len, 0);   // 311
+  // پیش‌فرض‌های هر شعبه (قابل ویرایش؛ تغییرات در مرورگر ذخیره می‌شود)
+  const KAR_DEFAULTS = {
+    tabriz:  { name: 'شرکت تامین کالا باختر', farm: 'آقای میرقدیر شهلائی', adrs: 'تبریز -جاده آذرشهر -شهرک صنعتی غرب' },
+    ardabil: { name: 'شرکت تامین کالا باختر', farm: 'آقای میرقدیر شهلائی', adrs: '' },
+  };
+  const key = () => 'bime-kar-' + ($('branch').value || 'tabriz');
+  const load = () => { try { return JSON.parse(localStorage.getItem(key())) || null } catch (e) { return null } };
+  const save = () => { try { localStorage.setItem(key(), JSON.stringify({ name: $('karName').value, farm: $('karFarm').value, adrs: $('karAdrs').value })) } catch (e) {} };
+  function fillBranch() { const v = load() || KAR_DEFAULTS[$('branch').value] || KAR_DEFAULTS.tabriz; $('karName').value = v.name; $('karFarm').value = v.farm; $('karAdrs').value = v.adrs; }
+  function fillSheet() { const contract = /پیمان/.test($('sheetSelect').value || ''); $('karPym').value = contract ? '001' : ''; $('karDisc').value = contract ? '1' : '2'; }
+
+  function header() { const b = atob(KAR_HEADER_B64), h = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) h[i] = b.charCodeAt(i); return h; }
+  function buildRecord() {
+    const rows = linkRows.filter(x => x.combined).map(x => x);
+    const sum = f => rows.reduce((a, x) => a + number(x.combined[f] || 0), 0);
+    const missing = rows.filter(x => !x.leaver && x.pay._mostamar === '');
+    if (missing.length) throw Error('ستون «مستمر + تاهل» برای ' + missing.length + ' نفر در اکسل حقوق نیست؛ جمع مزایای مستمر DSKKAR00 از همین ستون ساخته می‌شود');
+    const tmash = sum('DSW_MASH');
+    return {
+      DSK_ID: codeOf($('workshop').value), DSK_NAME: $('karName').value.trim(), DSK_FARM: $('karFarm').value.trim(), DSK_ADRS: $('karAdrs').value.trim(),
+      DSK_KIND: 0, DSK_YY: number($('year').value) % 100, DSK_MM: number($('month').value), DSK_LISTNO: digits($('listno').value).trim(), DSK_DISC: $('karDisc').value.trim(),
+      DSK_NUM: rows.length, DSK_TDD: sum('DSW_DD'), DSK_TROOZ: sum('DSW_ROOZ'), DSK_TMAH: sum('DSW_MAH'),
+      DSK_TMAZ: rows.reduce((a, x) => a + (x.leaver ? 0 : number(x.pay._mostamar)), 0),   // فقط مزایای مستمر (+تأهل)، مطابق فایل‌های رسمی
+      DSK_TMASH: tmash, DSK_TTOTL: sum('DSW_TOTL'), DSK_TBIME: sum('DSW_BIME'),
+      DSK_TKOSO: Math.round(tmash * 0.20), DSK_BIC: Math.round(tmash * 0.03), DSK_RATE: 0, DSK_PRATE: 0, DSK_BIMH: 0,
+      MON_PYM: digits($('karPym').value).trim(), DSK_INC: rows.reduce((a, x) => a + number(x.combined.DSW_INC || 0) * number(x.combined.DSW_DD || 0), 0), DSK_SPOUSE: sum('DSW_SPOUSE'),
+    };
+  }
+  function makeKar(rec) {
+    for (const k of ['DSK_NAME', 'DSK_FARM', 'DSK_ADRS']) if (!rec[k]) throw Error(KAR_SCHEMA.find(f => f.name === k).label + ' خالی است (مشخصات کارگاه در مرحله ۲)');
+    const h = header(), dest = new Uint8Array(h.length + REC_LEN); dest.set(h);
+    const dv = new DataView(dest.buffer), now = new Date();
+    dest[1] = (now.getFullYear() - 1900) & 255; dest[2] = now.getMonth() + 1; dest[3] = now.getDate(); dv.setUint32(4, 1, true);
+    let off = h.length; dest[off++] = 32;
+    for (const f of KAR_SCHEMA) { dest.fill(32, off, off + f.len); const b = fieldBytes(f, rec[f.name]); dest.set(b, f.type === 'N' ? off + f.len - b.length : off); off += f.len; }
+    const back = parseDbf(dest);
+    if (back.header !== 833 || back.record !== REC_LEN || back.count !== 1) throw Error('ساختار فایل DSKKAR00 تأیید نشد');
+    for (const f of KAR_SCHEMA) if (f.type === 'N' && back.records[0][f.name] !== number(rec[f.name])) throw Error('کنترل ' + f.label + ' ناموفق بود');
+    return dest;
+  }
+  function exportKar() {
+    if ($('exportBtn').disabled) { notify('ابتدا موارد لیست بیمه را رسیدگی کنید.'); return; }
+    try { syncData(); const rec = buildRecord(); download(makeKar(rec), 'DSKKAR00.dbf', 'application/octet-stream');
+      notify('DSKKAR00 ساخته شد: ' + rec.DSK_NUM + ' نفر، جمع حق بیمه ' + (rec.DSK_TBIME + rec.DSK_TKOSO + rec.DSK_BIC).toLocaleString('en-US') + ' ریال. هر دو فایل را با هم ارسال کنید.'); }
+    catch (e) { notify('خطای ساخت DSKKAR00: ' + e.message); console.error(e); }
+  }
+  $('karBtn').addEventListener('click', exportKar);
+  new MutationObserver(() => { $('karBtn').disabled = $('exportBtn').disabled; }).observe($('exportBtn'), { attributes: true, attributeFilter: ['disabled'] });
+  $('branch').addEventListener('change', fillBranch);
+  $('sheetSelect').addEventListener('change', fillSheet);
+  new MutationObserver(fillSheet).observe($('sheetSelect'), { childList: true });
+  for (const id of ['karName', 'karFarm', 'karAdrs']) $(id).addEventListener('change', save);
+  fillBranch(); fillSheet(); $('karBtn').disabled = $('exportBtn').disabled;
 })();
 </script>
 </body></html>
