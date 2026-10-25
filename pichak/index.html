@@ -223,6 +223,21 @@
             overflow-wrap: anywhere;
             white-space: pre-line;
         }
+        .pichak-result-note {
+            text-align: right;
+            background: #fff8e8;
+            border: 1px solid #f3e1b5;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin: 0 0 14px;
+            font-size: .84rem;
+            line-height: 1.9;
+            color: #6b5420;
+        }
+        .pichak-result-note::before {
+            content: 'یادآوری بانک: ';
+            font-weight: 800;
+        }
         .pichak-result-holders {
             text-align: right;
             display: grid;
@@ -370,6 +385,7 @@
         <h2 id="pichakResultTitle">نتیجه استعلام</h2>
         <p id="pichakResultMessage" class="pichak-result-message"></p>
         <div id="pichakResultHolders" class="pichak-result-holders"></div>
+        <p id="pichakResultNote" class="pichak-result-note" hidden></p>
         <button type="button" class="pichak-result-done" id="pichakResultDone" onclick="closeInquiryResult()">متوجه شدم</button>
     </section>
 </div>
@@ -583,8 +599,11 @@
         pichakPreviousFocus = null;
     }
 
-    function showInquiryResult(kind, title, message, holders) {
+    function showInquiryResult(kind, title, message, holders, note) {
         const overlay = document.getElementById('pichakResultOverlay');
+        const noteBox = document.getElementById('pichakResultNote');
+        noteBox.textContent = String(note || '');
+        noteBox.hidden = !note;
         const list = document.getElementById('pichakResultHolders');
         document.getElementById('pichakResultTitle').textContent = title;
         document.getElementById('pichakResultMessage').textContent = String(message || 'نتیجه مشخص نیست.');
@@ -674,9 +693,9 @@
             });
             const data = await response.json();
             if (response.ok && data.success === true && data.is_registered === true) {
-                showInquiryResult('success', 'چک ثبت شده است', data.message || 'ثبت چک توسط بانک مرکزی تأیید شد.', data.holders);
+                showInquiryResult('success', 'چک ثبت شده است', data.message || 'ثبت چک توسط بانک مرکزی تأیید شد.', data.holders, data.note);
             } else if (response.ok && data.success === true && data.is_registered === false) {
-                showInquiryResult('warning', 'چک ثبت نشده است', data.message || 'چک در استعلام ثبت نشده گزارش شده است.');
+                showInquiryResult('warning', 'چک ثبت نشده است', data.message || 'چک در استعلام ثبت نشده گزارش شده است.', [], data.note);
             } else {
                 // Do not present malformed CBI responses, expired captcha, or network errors as "not registered".
                 showInquiryResult('warning', 'نتیجه قابل تأیید نیست', data.message || 'نتیجه استعلام نامشخص است؛ در سامانه رسمی بانک بررسی کنید.');

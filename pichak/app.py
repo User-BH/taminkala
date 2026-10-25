@@ -221,7 +221,7 @@ class CBISessionHandler:
 _FA_NORM = str.maketrans({"ي": "ی", "ك": "ک", "\u200c": " ", "\u200f": "", "\u200e": "", "\xa0": " "})
 _FA_LITERAL = re.compile(r"""(['"])((?:(?!\1)[^\\\n]|\\.)*?[\u0600-\u06FF](?:(?!\1)[^\\\n]|\\.)*?)\1""")
 NOT_REGISTERED = ("ثبت نشده", "ثبت نگردیده", "ثبت نشد")
-UNCERTAIN = ("کد امنیتی", "کد تصویر", "کپچا", "captcha", "منقضی", "مجدد", "خطا", "نامعتبر", "اشتباه",
+UNCERTAIN = ("کد امنیتی", "کد تصویر", "کپچا", "captcha", "منقضی", "مجدد", "خطا", "نامعتبر", "معتبر نمی", "اشتباه",
              "صحیح نیست", "صحیح نمی", "مطابقت ندارد", "مطابقت نداشت", "مغایرت", "یافت نشد", "وجود ندارد")
 REGISTERED = ("ثبت شده", "ثبت شد", "ثبت گردیده", "ثبت گردید")
 DUMP_DIR = Path(os.getenv("PICHAK_DUMP_DIR") or HERE / "logs" / "cbi")
@@ -247,23 +247,52 @@ def _delta_parts(raw):
     return parts or None
 
 
+_HIDDEN = re.compile(r"display\s*:\s*none|visibility\s*:\s*hidden", re.I)
+
+
+def _visible_soup(html):
+    """Parsed fragment without scripts, styles, dropdowns and hidden elements (e.g. inactive validators)."""
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "select", "noscript", "template"]):
+        tag.decompose()
+    for tag in soup.find_all(style=_HIDDEN):
+        tag.decompose()
+    for tag in soup.find_all(attrs={"hidden": True}):
+        tag.decompose()
+    return soup
+
+
+def _script_literals(html):
+    soup = BeautifulSoup(html, "html.parser")
+    return [_norm(m.group(2)) for tag in soup.find_all("script") for m in _FA_LITERAL.finditer(tag.get_text())]
+
+
 def page_texts(html):
     """Visible text pieces of an HTML fragment and the Persian string literals of its scripts (alert/swal...)."""
-    soup = BeautifulSoup(html, "html.parser")
-    literals = [_norm(m.group(2)) for tag in soup.find_all("script") for m in _FA_LITERAL.finditer(tag.get_text())]
-    for tag in soup(["script", "style", "select", "noscript"]):
-        tag.decompose()
-    return [_norm(t) for t in soup.stripped_strings] + literals
+    return [_norm(t) for t in _visible_soup(html).stripped_strings] + _script_literals(html)
 
 
-def _holder_rows(html, baseline):
+def _take_holders(soup, baseline):
+    """Holder rows (type, national/company id, name); the tables they are in are removed from ``soup``."""
     holders = []
-    for row in BeautifulSoup(html, "html.parser").find_all("tr"):
-        cols = [_norm(td.get_text(" ", strip=True)) for td in row.find_all("td")]
-        # a holder row carries a national/company id; layout rows of the form never do
-        if len(cols) >= 3 and re.fullmatch(r"\d{8,12}", only_digits(cols[1])) and not all(c in baseline for c in cols):
-            holders.append({"customer_type": cols[0], "id_code": cols[1], "name": cols[2]})
+    for table in soup.find_all("table"):
+        found = []
+        for row in table.find_all("tr"):
+            cols = [_norm(td.get_text(" ", strip=True)) for td in row.find_all("td")]
+            # a holder row carries a national/company id; layout rows of the form never do
+            if len(cols) >= 3 and re.fullmatch(r"\d{8,12}", only_digits(cols[1])) and not all(c in baseline for c in cols):
+                found.append({"customer_type": cols[0], "id_code": cols[1], "name": cols[2]})
+        if found:
+            holders += found
+            table.decompose()
     return holders
+
+
+def _sentence(text):
+    """Tidy one line of bank text: spacing after Persian comma, ':' at the end becomes '.'."""
+    text = re.sub(r"\s*([،,])\s*", r"\1 ", text).strip()
+    text = re.sub(r"\s*[:：]\s*$", "", text)
+    return text if re.search(r"[.!؟?]$", text) else text + "."
 
 
 def _dump(raw, reason):
@@ -285,9 +314,10 @@ def parse_cbi_response(raw, baseline=frozenset()):
     """Classify the bank's answer; fail closed.
 
     The bank page isn't a stable public API, so element ids are not relied on: the answer is the
-    text that appears in the response but was not on the empty form (``baseline``). A check is
-    reported registered/unregistered only on explicit wording; anything else is shown as the
-    bank's own message with is_registered None. Errors are never read as "unregistered".
+    visible text that appears in the response but was not on the empty form (``baseline``).
+    A check is reported registered/unregistered only on explicit wording; anything else is shown
+    as the bank's own message with is_registered None. Errors are never read as "unregistered".
+    Result: message (the status sentence), holders, note (the bank's other remarks).
     """
     parts = _delta_parts(raw)
     if parts is None:
@@ -295,38 +325,49 @@ def parse_cbi_response(raw, baseline=frozenset()):
     else:
         for typ, _pid, content in parts:
             if typ == "error":
-                return {"success": False, "is_registered": None, "holders": [],
+                return {"success": False, "is_registered": None, "holders": [], "note": "",
                         "message": "بانک خطا برگرداند: " + _norm(content)[:300]}
             if typ == "pageRedirect":
-                return {"success": False, "is_registered": None, "holders": [],
+                return {"success": False, "is_registered": None, "holders": [], "note": "",
                         "message": "بانک صفحه را به نشانی دیگری فرستاد؛ نتیجه را در سامانه رسمی بررسی کنید."}
         fragments = [c for t, _i, c in parts if t == "updatePanel"]
         scripts = [c for t, _i, c in parts if t.startswith("scriptBlock") or t.startswith("ScriptContent")
                    or t == "scriptStartupBlock" or t == "onSubmit"]
-    texts = [t for f in fragments for t in page_texts(f)]
+    holders, texts = [], []
+    for fragment in fragments:
+        soup = _visible_soup(fragment)
+        holders += _take_holders(soup, baseline)
+        texts += [_norm(t) for t in soup.stripped_strings] + _script_literals(fragment)
     texts += [_norm(m.group(2)) for js in scripts for m in _FA_LITERAL.finditer(js)]
     seen, answer = set(baseline), []
     for t in texts:
         if len(t) > 1 and t not in seen:
             seen.add(t)
             answer.append(t)
-    holders = [h for f in fragments for h in _holder_rows(f, baseline)]
-    message = " · ".join(answer)[:500]
-    low = message.lower()
+    low = " ".join(answer).lower()
+    status = next((t for t in answer if any(w in t for w in REGISTERED + NOT_REGISTERED)), "")
+    note = " ".join(_sentence(t) for t in answer if t != status)[:600]
+    registered = any(w in status for w in REGISTERED) and not any(w in status for w in NOT_REGISTERED)
 
-    if any(w in low for w in NOT_REGISTERED) and not any(w in low for w in UNCERTAIN):
-        return {"success": True, "is_registered": False, "message": message, "holders": []}
+    def result(ok, reg, message, rows=(), with_note=True):
+        return {"success": ok, "is_registered": reg, "message": message, "holders": list(rows), "note": note if with_note else ""}
+
+    if registered and holders:   # explicit wording plus the bank's holder table: unambiguous
+        # form-validation leftovers ("... معتبر نمی باشد") contradict the holder table; keep only the bank's remarks
+        note = " ".join(_sentence(t) for t in answer if t != status and not any(w in t.lower() for w in UNCERTAIN))[:600]
+        return result(True, True, _sentence(status), holders)
+    if any(w in status for w in NOT_REGISTERED) and not any(w in low for w in UNCERTAIN):
+        return result(True, False, _sentence(status))
     if any(w in low for w in UNCERTAIN):
-        return {"success": False, "is_registered": None, "message": "پیام بانک: " + message, "holders": []}
-    if any(w in low for w in REGISTERED) or holders:
-        return {"success": True, "is_registered": True, "message": message or "ثبت چک توسط بانک مرکزی تأیید شد.",
-                "holders": holders}
+        return result(False, None, "پیام بانک: " + " ".join(_sentence(t) for t in answer)[:500], with_note=False)
+    if registered or holders:
+        return result(True, True, _sentence(status) if status else "ثبت چک توسط بانک مرکزی تأیید شد.", holders)
     _dump(raw, "unknown")
-    if message:
-        return {"success": False, "is_registered": None, "holders": [],
-                "message": "پیام بانک: " + message + " — نتیجه خودکار تشخیص داده نشد؛ متن بالا پاسخ خود بانک است."}
-    return {"success": False, "is_registered": None, "holders": [],
-            "message": "پاسخ بانک متن قابل نمایشی نداشت؛ این به معنی ثبت‌نشدن چک نیست. در سامانه رسمی بررسی کنید."}
+    if answer:
+        return result(False, None, "پیام بانک: " + " ".join(_sentence(t) for t in answer)[:500]
+                      + "\nنتیجه خودکار تشخیص داده نشد؛ متن بالا پاسخ خود بانک است.", with_note=False)
+    return result(False, None, "پاسخ بانک متن قابل نمایشی نداشت؛ این به معنی ثبت‌نشدن چک نیست. در سامانه رسمی بررسی کنید.",
+                  with_note=False)
 
 
 def save_session(handler):
