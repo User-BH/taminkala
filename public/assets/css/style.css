@@ -228,6 +228,8 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
   position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 28px 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px;
 }
+.portal-grid.solo { grid-template-columns: minmax(0, 520px); justify-content: center; }
+.portal-card[hidden] { display: none; }
 .portal-card::after { content: ''; position: absolute; left: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(207,23,37,.10), transparent 70%); pointer-events: none; }
 .portal-icon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: var(--red); color: #fff; box-shadow: 0 10px 22px rgba(207,23,37,.3); margin-bottom: 6px; }
 .portal-icon svg { width: 28px; height: 28px; }
@@ -304,6 +306,27 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .brand-tile img { object-fit: contain !important; padding: 18px; filter: grayscale(1); opacity: .8; transition: filter .3s, opacity .3s; }
 .brand-tile:hover img { filter: none; opacity: 1; }
 @keyframes scroll { to { transform: translateX(calc(50% + 9px)); } }
+
+/* ---------- بنر برندها ---------- */
+.brand-banners { display: grid; grid-template-columns: 3fr 4fr; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 18px; aspect-ratio: 1.75; }
+.bb { position: relative; margin: 0; overflow: hidden; border-radius: var(--radius); box-shadow: var(--shadow-lg); background: var(--bg-2); isolation: isolate; }
+.bb.tall { grid-row: span 2; }
+.bb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.bb:hover img { transform: scale(1.06); }
+.bb figcaption {
+  position: absolute; inset: auto 0 0 0; padding: 46px 20px 18px; color: #fff; z-index: 1;
+  background: linear-gradient(to top, rgba(20,12,10,.82), rgba(20,12,10,.35) 60%, transparent);
+  display: grid; gap: 2px; transform: translateY(8px); transition: transform .5s;
+}
+.bb:hover figcaption { transform: none; }
+.bb figcaption b { font-size: 19px; font-weight: 900; }
+.bb figcaption small { font-size: 13px; opacity: .85; }
+.bb-tag { justify-self: start; font-size: 11.5px; font-weight: 800; padding: 2px 10px; border-radius: 99px; background: var(--red); margin-bottom: 4px; }
+@media (max-width: 760px) {
+  .brand-banners { grid-template-columns: 1fr; grid-template-rows: none; aspect-ratio: auto; }
+  .bb.tall { grid-row: auto; aspect-ratio: 4 / 5; }
+  .bb.wide { aspect-ratio: 16 / 9; }
+}
 
 /* ---------- فرآیند ---------- */
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; counter-reset: s; position: relative; }

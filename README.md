@@ -17,6 +17,10 @@
 
 ساخت بسته از روی مخزن (روی لینوکس/مک با اینترنت): `bash windows/build.sh` ← `dist/TaminKala-windows-<نسخه>.zip`
 کد سرور: `windows/server.py` (Waitress؛ سایت 80، پیچک 8081، بیمه 8082؛ `/ports.json` برای لینک‌های سایت).
+سامانه بیمه و حواله فقط از شبکه داخلی باز می‌شود (`bime_allow` در `data\config.json`؛ پیش‌فرض شبکه‌های خصوصی و خود سرور)؛
+هم server.py بر اساس IP واقعی اتصال رد می‌کند و هم قانون فایروال `TaminKala-internal` پورت آن را فقط برای شبکه داخلی باز می‌کند.
+از بیرون، کارت بیمه در سایت پنهان می‌شود و پورت آن صفحه `public/internal-only.html` (۴۰۳) را نشان می‌دهد.
+روی میکروتیک فقط پورت‌های سایت و پیچک را dst-nat کنید.
 
 ## ساختار روی سرور لینوکس (روش قبلی)
 
@@ -123,7 +127,7 @@ sudo taminkala doctor
 | `public/assets/img/photos/cat-beverage.jpg` | نوشیدنی (۴:۳) |
 | `public/assets/img/photos/gallery-1.jpg` … `gallery-4.jpg` | گالری |
 | `public/assets/img/photos/map.jpg` | تصویر نقشه |
-| `public/assets/img/brands/brand-1.png` … `brand-8.png` | لوگوی برندهای همکار (PNG بدون پس‌زمینه) |
+| `public/assets/img/brands/doghazal.jpg`، `tohfe.jpg`، `sofia.jpg` | بنر برندهای همکار (عمودی برای اولی، افقی برای دو تای دیگر) |
 
 عکس‌ها را قبل از آپلود فشرده کنید (حداکثر ~۳۰۰KB؛ jpg یا webp).
 

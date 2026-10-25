@@ -96,9 +96,12 @@ Ok "Service registered: starts with Windows"
 
 # 6) firewall
 Say "Opening firewall ports"
-Get-NetFirewallRule -DisplayName $Rule -ErrorAction SilentlyContinue | Remove-NetFirewallRule
-New-NetFirewallRule -DisplayName $Rule -Direction Inbound -Protocol TCP -LocalPort @($site, [int]$cfg.pichak_port, [int]$cfg.bime_port) -Action Allow | Out-Null
-Ok "Firewall open for $site, $($cfg.pichak_port), $($cfg.bime_port)"
+Get-NetFirewallRule -DisplayName "$Rule*" -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+New-NetFirewallRule -DisplayName $Rule -Direction Inbound -Protocol TCP -LocalPort @($site, [int]$cfg.pichak_port) -Action Allow | Out-Null
+# insurance system: company network only (server.py also refuses other addresses)
+New-NetFirewallRule -DisplayName "$Rule-internal" -Direction Inbound -Protocol TCP -LocalPort ([int]$cfg.bime_port) -Action Allow `
+  -RemoteAddress @('LocalSubnet', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16') | Out-Null
+Ok "Firewall open for $site, $($cfg.pichak_port) (everyone) and $($cfg.bime_port) (company network only)"
 
 # 7) start and check
 Say "Starting"

@@ -137,7 +137,7 @@
     <div class="sec-head center reveal">
       <span class="eyebrow">سامانه‌های کارکنان</span>
       <h2>ورود به سامانه‌های داخلی شرکت</h2>
-      <p>این دو سامانه برای همکاران شرکت است؛ نشانی مستقیم هر کدام را می‌توانید ذخیره کنید یا برای همکاران بفرستید.</p>
+      <p>این سامانه‌ها برای همکاران شرکت است؛ نشانی مستقیم هر کدام را می‌توانید ذخیره کنید یا برای همکاران بفرستید.</p>
     </div>
     <div class="portal-grid">
       <article class="portal-card reveal">
@@ -150,7 +150,7 @@
           <button type="button" class="portal-addr" data-copy="pichak" title="کپی نشانی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="pichak">—</span></button>
         </div>
       </article>
-      <article class="portal-card reveal">
+      <article class="portal-card reveal" data-internal>
         <div class="portal-icon"><svg class="i"><use href="#i-doc"/></svg></div>
         <span class="portal-who">ویژه واحد مالی و منابع انسانی</span>
         <h3>سامانه‌ی بیمه و حواله</h3>
@@ -276,25 +276,27 @@
 </section>
 
 <!-- ============ برندها ============ -->
-<!-- لوگوی برندها را در assets/img/brands/ با نام brand-1.png ، brand-2.png ، ... قرار دهید -->
+<!-- بنر برندها: برای افزودن برند جدید یک <a class="bb"> با عکس در assets/img/brands/ اضافه کنید (کلاس tall برای بنر عمودی) -->
 <section class="section" id="brands">
   <div class="wrap">
     <div class="sec-head center reveal">
       <span class="eyebrow">برندهای همکار</span>
-      <h2>همراه با برندهای معتبر کشور</h2>
-      <p>افتخار همکاری با تولیدکنندگان شناخته‌شده در صنایع غذایی، بهداشتی و شوینده</p>
+      <h2>همراه با برندهای محبوب سفره‌ی ایرانی</h2>
+      <p>بخشی از برندهایی که تأمین کالا باختر توزیع آن‌ها را به فروشگاه‌ها و مراکز خرید انجام می‌دهد</p>
     </div>
-  </div>
-  <div class="brands-marquee reveal">
-    <div class="brands-track">
-      <div class="brand-tile media" data-src="assets/img/brands/brand-1.png" data-label="لوگوی برند ۱"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-2.png" data-label="لوگوی برند ۲"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-3.png" data-label="لوگوی برند ۳"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-4.png" data-label="لوگوی برند ۴"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-5.png" data-label="لوگوی برند ۵"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-6.png" data-label="لوگوی برند ۶"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-7.png" data-label="لوگوی برند ۷"></div>
-      <div class="brand-tile media" data-src="assets/img/brands/brand-8.png" data-label="لوگوی برند ۸"></div>
+    <div class="brand-banners">
+      <figure class="bb tall reveal">
+        <img src="assets/img/brands/doghazal.jpg" alt="بنر چای دوغزال" width="900" height="1350" loading="lazy" decoding="async">
+        <figcaption><span class="bb-tag">چای</span><b>چای دوغزال</b><small>لحظه‌ای مکث کنیم و چای بنوشیم</small></figcaption>
+      </figure>
+      <figure class="bb wide reveal">
+        <img src="assets/img/brands/tohfe.jpg" alt="بنر تن ماهی تحفه" width="1400" height="788" loading="lazy" decoding="async" style="object-position:70% 50%">
+        <figcaption><span class="bb-tag">کنسرو</span><b>تن ماهی تحفه</b><small>طعم دریا، کیفیتی که می‌شناسید</small></figcaption>
+      </figure>
+      <figure class="bb wide reveal">
+        <img src="assets/img/brands/sofia.jpg" alt="بنر چای سوفیا" width="1400" height="787" loading="lazy" decoding="async" style="object-position:35% 50%">
+        <figcaption><span class="bb-tag">چای</span><b>چای سوفیا</b><small>عطر و طعم اصیل، برای لحظه‌های ناب</small></figcaption>
+      </figure>
     </div>
   </div>
 </section>

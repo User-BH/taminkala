@@ -127,7 +127,15 @@
   }
   paintPortal();
   if (window.fetch) fetch('/ports.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (p) { if (p) { ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; }); paintPortal(); } }).catch(function () {});
+    .then(function (p) {
+      if (!p) return;
+      ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; });
+      paintPortal();
+      // سامانه‌های داخلی (بیمه و حواله) بیرون از شبکه شرکت اصلاً نشان داده نمی‌شوند
+      if (p.internal === false) document.querySelectorAll('[data-internal]').forEach(function (el) {
+        el.hidden = true; el.parentNode.classList.add('solo');
+      });
+    }).catch(function () {});
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
       var url = portalUrl(b.getAttribute('data-copy')), span = b.querySelector('[data-addr]'), old = span.textContent;

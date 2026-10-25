@@ -7,8 +7,8 @@ $Server = Join-Path $Root 'server.py'
 Stop-ScheduledTask -TaskName $Task -ErrorAction SilentlyContinue
 Unregister-ScheduledTask -TaskName $Task -Confirm:$false -ErrorAction SilentlyContinue
 Get-CimInstance Win32_Process -Filter "Name='pythonw.exe'" | Where-Object { $_.CommandLine -like "*$Server*" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-Get-NetFirewallRule -DisplayName 'TaminKala' -ErrorAction SilentlyContinue | Remove-NetFirewallRule
-Write-Host "  OK  Service and firewall rule removed" -ForegroundColor Green
+Get-NetFirewallRule -DisplayName 'TaminKala*' -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+Write-Host "  OK  Service and firewall rules removed" -ForegroundColor Green
 
 # give port 80 back to IIS if install.ps1 stopped its default site
 $mark = Join-Path $Root 'data\iis-stopped.txt'
