@@ -11,7 +11,10 @@
 1. zip را در `C:\` باز کنید تا `C:\TaminKala` ساخته شود.
 2. روی `install.bat` دوبار کلیک کنید (اجازه‌ی مدیر را بدهید). سرویس با ویندوز اجرا می‌شود، پورت‌ها در فایروال باز می‌شوند
    و اگر صفحه‌ی پیش‌فرض IIS پورت 80 را گرفته باشد، فقط همان سایت پیش‌فرض متوقف می‌شود.
-3. به‌روزرسانی: zip جدید را روی همان پوشه باز کنید و دوباره `install.bat` (تنظیمات در `data\` می‌ماند).
+3. به‌روزرسانی: با هر push روی شاخه‌ی پیش‌فرض، GitHub Actions (`.github/workflows/windows-release.yml`) بسته را می‌سازد و در
+   [Releases](https://github.com/User-BH/taminkala/releases/latest) با نام `TaminKala-windows.zip` منتشر می‌کند.
+   روی سرور فایل را دانلود کنید و `update.bat` را بزنید (zip را از Downloads برمی‌دارد، سرویس را متوقف و فایل‌ها را جایگزین می‌کند).
+   با گذاشتن یک توکن فقط‌خواندنی در `data\github-token.txt`، `update.bat` خودش آخرین نسخه را دانلود می‌کند. تنظیمات در `data\` می‌ماند.
 
 `status.bat` وضعیت · `restart.bat` راه‌اندازی دوباره · `uninstall.bat` حذف سرویس · تنظیم پورت‌ها: `data\config.json`
 

@@ -1,0 +1,47 @@
+# Builds the Windows package and publishes it as a GitHub Release.
+# Latest package: https://github.com/<owner>/<repo>/releases/latest  (asset: TaminKala-windows.zip)
+# On the server, update.bat downloads and applies it.
+name: Windows package
+
+on:
+  push:
+    paths: [public/**, bime/**, pichak/**, pichak-ocr/**, windows/**, .github/workflows/windows-release.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # only the default branch publishes releases
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/windows
+          key: windows-${{ hashFiles('windows/build.sh') }}
+      - name: Build
+        run: bash windows/build.sh dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          TAG="v$(date -u +%Y.%m.%d)-${{ github.run_number }}"
+          mv dist/TaminKala-windows-*.zip dist/TaminKala-windows.zip
+          gh release create "$TAG" dist/TaminKala-windows.zip \
+            --target "$GITHUB_SHA" --latest \
+            --title "نسخه $TAG ($SHA)" \
+            --notes "$(git log -1 --pretty=%B | sed '/^Co-Authored-By\|^Claude-Session/d')
+
+          نصب یا به‌روزرسانی روی سرور: روی update.bat دوبار کلیک کنید.
+          version: $SHA"

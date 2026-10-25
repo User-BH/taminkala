@@ -26,13 +26,18 @@ ol li{margin:6px 0}.muted{color:#6f6a6b;font-size:13px}
 <p><b>میکروتیک:</b> فقط پورت‌های 80 و 8081 را به سرور فوروارد کنید (dst-nat)؛ پورت 8082 را از اینترنت فوروارد نکنید.</p>
 <p class="muted">اگر صفحه‌ی خوش‌آمدگویی IIS روی پورت 80 فعال باشد، نصب فقط همان سایت پیش‌فرض IIS را متوقف می‌کند (با uninstall.bat برمی‌گردد). اگر پورت 80 دست برنامه‌ی دیگری باشد، سایت خودکار روی 8080 نصب و اعلام می‌شود.</p></div>
 
-<div class="card"><h2>به‌روزرسانی</h2><ol>
-<li>فایل zip نسخه‌ی جدید را روی همان <code>C:\TaminKala</code> باز کنید و «جایگزینی فایل‌ها» را تأیید کنید (پوشه‌ی <code>data</code> و تنظیمات دست نمی‌خورد).</li>
-<li>دوباره روی <kbd>install.bat</kbd> دوبار کلیک کنید.</li>
-</ol></div>
+<div class="card"><h2>به‌روزرسانی (از گیت‌هاب)</h2>
+<p>هر نسخه‌ی جدید خودکار در صفحه‌ی <code>github.com/User-BH/taminkala/releases</code> با نام <code>TaminKala-windows.zip</code> قرار می‌گیرد.</p>
+<ol>
+<li>روی سرور در مرورگر وارد گیت‌هاب شوید و از صفحه‌ی بالا (Latest) فایل <code>TaminKala-windows.zip</code> را دانلود کنید (در پوشه‌ی Downloads ذخیره می‌شود).</li>
+<li>روی <kbd>update.bat</kbd> در <code>C:\TaminKala</code> دوبار کلیک کنید. خودش فایل را از Downloads برمی‌دارد، سرویس را متوقف می‌کند، فایل‌ها را جایگزین می‌کند و دوباره راه می‌اندازد. نیازی به باز کردن zip نیست.</li>
+</ol>
+<p>اگر فایل دانلودشده پیدا نشود، update.bat صفحه‌ی ریلیز را در مرورگر باز می‌کند.</p>
+<p><b>به‌روزرسانی کاملاً خودکار (اختیاری):</b> در گیت‌هاب از Settings → Developer settings → Fine-grained tokens یک توکن فقط برای مخزن taminkala با دسترسی <code>Contents: Read-only</code> بسازید و آن را در فایل <code>data\github-token.txt</code> بگذارید. از آن به بعد update.bat آخرین نسخه را خودش دانلود می‌کند و اگر نسخه‌ی نصب‌شده جدیدترین باشد، چیزی را تغییر نمی‌دهد.</p>
+<p class="muted">تنظیمات (<code>data</code>) و گزارش‌ها (<code>logs</code>) با به‌روزرسانی دست نمی‌خورند.</p></div>
 
 <div class="card"><h2>کارهای روزمره</h2>
-<p><kbd>status.bat</kbd> وضعیت سه بخش و آخرین خطاها · <kbd>restart.bat</kbd> راه‌اندازی دوباره · <kbd>uninstall.bat</kbd> حذف سرویس و قانون فایروال (فایل‌ها می‌مانند)</p>
+<p><kbd>update.bat</kbd> به‌روزرسانی · <kbd>status.bat</kbd> وضعیت سه بخش و آخرین خطاها · <kbd>restart.bat</kbd> راه‌اندازی دوباره · <kbd>uninstall.bat</kbd> حذف سرویس و قانون فایروال (فایل‌ها می‌مانند)</p>
 <p>تغییر پورت‌ها: فایل <code>data\config.json</code> را با Notepad باز کنید، عدد پورت را عوض کنید و <kbd>install.bat</kbd> را دوباره اجرا کنید.</p>
 <p>گزارش خطاها: <code>logs\server.log</code></p></div>
 </div></body></html>

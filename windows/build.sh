@@ -41,5 +41,14 @@ echo "$VERSION" > "$STAGE/VERSION.txt"
 
 ZIP="$OUT/TaminKala-windows-$VERSION.zip"
 rm -f "$ZIP"
-(cd "$(dirname "$STAGE")" && zip -qr -X "$ZIP" TaminKala)
+# Python's zipfile marks non-ASCII names as UTF-8, so Windows shows راهنما.html correctly
+python3 - "$(dirname "$STAGE")" "$ZIP" <<'PY'
+import os, sys, zipfile
+base, out = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+    for d, _, files in os.walk(os.path.join(base, "TaminKala")):
+        for f in sorted(files):
+            full = os.path.join(d, f)
+            z.write(full, os.path.relpath(full, base).replace(os.sep, "/"))
+PY
 echo "✔ $ZIP ($(du -h "$ZIP" | cut -f1))"
