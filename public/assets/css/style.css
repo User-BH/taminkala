@@ -257,28 +257,48 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .checks li { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
 .checks li svg { color: var(--good); }
 
-/* ---------- دسته‌بندی‌ها ---------- */
-.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+/* ---------- دسته‌بندی‌ها (هر کارت رنگ خودش را از --c می‌گیرد) ---------- */
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
 .cat {
+  --c: var(--red);
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  overflow: hidden; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s;
-  display: flex; flex-direction: column;
+  box-shadow: var(--shadow); transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s;
 }
-.cat:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.cat::before { content: ''; position: absolute; left: -50px; top: -50px; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, rgba(207,23,37,.09), transparent 70%); pointer-events: none; }
-.cat { position: relative; }
-.cat-body { padding: 26px 24px 24px; position: relative; flex: 1; display: flex; flex-direction: column; }
-.cat-body .tags { margin-top: auto; padding-top: 16px; }
+.cat::after {   /* نوار رنگی پایین کارت هنگام hover */
+  content: ''; position: absolute; inset: auto 0 0 0; height: 4px; background: var(--c);
+  transform: scaleX(0); transform-origin: right; transition: transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.cat:hover { transform: translateY(-8px); box-shadow: 0 22px 46px color-mix(in srgb, var(--c) 22%, transparent); border-color: color-mix(in srgb, var(--c) 35%, var(--line)); }
+.cat:hover::after { transform: scaleX(1); }
+.cat-top {
+  position: relative; height: 128px; overflow: hidden; padding: 22px 22px 0;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--c) 22%, transparent) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    linear-gradient(135deg, color-mix(in srgb, var(--c) 20%, var(--surface)), color-mix(in srgb, var(--c) 5%, var(--surface)));
+}
 .cat-icon {
-  width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
-  background: var(--red); color: #fff; margin-bottom: 18px;
-  box-shadow: 0 10px 22px rgba(207,23,37,.3);
+  position: relative; z-index: 1; width: 60px; height: 60px; border-radius: 18px; display: grid; place-items: center;
+  background: var(--surface); color: var(--c); box-shadow: 0 12px 26px color-mix(in srgb, var(--c) 28%, transparent);
+  transition: transform .45s cubic-bezier(.2,.7,.2,1);
 }
-.cat-icon svg { width: 26px; height: 26px; }
-.cat h3 { font-size: 18px; font-weight: 900; margin-bottom: 6px; }
+.cat-icon svg { width: 28px; height: 28px; }
+.cat:hover .cat-icon { transform: translateY(-4px) rotate(-6deg); }
+.cat-art {
+  position: absolute; left: -18px; bottom: -34px; width: 150px; height: 150px; color: var(--c); opacity: .16;
+  transform: rotate(-14deg); transition: transform .6s cubic-bezier(.2,.7,.2,1), opacity .6s;
+}
+.cat:hover .cat-art { transform: rotate(0) scale(1.08); opacity: .24; }
+.cat-no {
+  position: absolute; left: 20px; top: 14px; font-size: 34px; font-weight: 900; line-height: 1;
+  color: transparent; -webkit-text-stroke: 1.2px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.cat-body { padding: 20px 22px 24px; display: flex; flex-direction: column; flex: 1; }
+.cat h3 { font-size: 19px; font-weight: 900; margin-bottom: 6px; }
 .cat p { color: var(--muted); font-size: 13.5px; margin: 0; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-.tags span { font-size: 11.5px; padding: 3px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 16px; }
+.tags span { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; color: color-mix(in srgb, var(--c, var(--red)) 80%, var(--ink));
+  background: color-mix(in srgb, var(--c, var(--red)) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c, var(--red)) 22%, transparent); }
 
 /* ---------- خدمات / چرا ما ---------- */
 .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -296,24 +316,38 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .feature p { color: var(--muted); font-size: 14px; }
 
 
-/* ---------- برندها ---------- */
-.brand-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; max-width: 1080px; margin: 0 auto; }
-.bc { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s; }
+/* ---------- برندها: یک ردیف متحرک (main.js کارت‌ها را یک‌بار تکرار می‌کند تا حرکت پیوسته باشد) ---------- */
+.brand-marquee {
+  overflow: hidden; padding: 10px 0 26px; margin-inline: -16px;
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.brand-track { --gap: 22px; display: flex; gap: var(--gap); width: max-content; padding-inline: 16px; }
+.brand-track.moving { animation: brand-move var(--dur, 32s) linear infinite; }
+.brand-marquee:hover .brand-track, .brand-marquee:focus-within .brand-track { animation-play-state: paused; }
+@keyframes brand-move { to { transform: translateX(calc(50% + var(--gap) / 2)); } }
+.bc { flex: none; width: 340px; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s; }
 .bc:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.bc-img { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--bg-2); }
+.bc-img { position: relative; aspect-ratio: 16 / 9.5; overflow: hidden; background: var(--bg-2); }
 .bc-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.7,.2,1); }
-/* بنر عمودی: کامل دیده شود، دو طرفش با همان تصویر محو پر شود */
-.bc.portrait .bc-img img { object-fit: contain; }
-.bc.portrait .bc-img .bc-bg { object-fit: cover; filter: blur(18px) saturate(1.2); transform: scale(1.2); opacity: .75; }
-.bc:hover .bc-img img:not(.bc-bg) { transform: scale(1.04); }
-.bc figcaption { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; }
-.bc figcaption b { font-size: 16px; font-weight: 900; }
-.bc-tag { font-size: 11.5px; font-weight: 800; padding: 3px 11px; border-radius: 99px; background: var(--soft); color: var(--red); }
-@media (max-width: 760px) {   /* موبایل: کارت‌ها افقی ورق می‌خورند تا صفحه بلند نشود */
-  .brand-cards { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory;
-    margin-inline: -16px; padding: 4px 16px 18px; scrollbar-width: none; }
-  .brand-cards::-webkit-scrollbar { display: none; }
-  .bc { scroll-snap-align: center; }
+.bc:hover .bc-img img { transform: scale(1.05); }
+.bc figcaption { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; min-height: 72px; }
+.bc figcaption b { display: block; font-size: 16px; font-weight: 900; }
+.bc-co { display: flex; align-items: baseline; line-height: 1.6; gap: 6px; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--red); }
+.bc-co::before { content: ''; flex: none; transform: translateY(-2px); width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+.bc-co:empty { display: none; }
+:root[data-theme="dark"] .bc-co { color: var(--red-2); }
+.bc-tag { flex: none; font-size: 11.5px; font-weight: 800; padding: 3px 11px; border-radius: 99px; background: var(--soft); color: var(--red); }
+@media (max-width: 560px) { .bc { width: 260px; } .brand-track { --gap: 14px; } }
+@media (max-width: 560px) {
+  .cat-top { height: 96px; padding: 16px 18px 0; }
+  .cat-icon { width: 52px; height: 52px; border-radius: 16px; }
+  .cat-art { width: 112px; height: 112px; bottom: -26px; }
+  .cat-body { padding: 16px 18px 20px; }
+}
+@media (prefers-reduced-motion: reduce) {   /* بدون حرکت خودکار: ورق زدن دستی */
+  .brand-marquee { overflow-x: auto; mask-image: none; -webkit-mask-image: none; }
+  .brand-track.moving { animation: none; }
 }
 
 /* ---------- فرآیند ---------- */

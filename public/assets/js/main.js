@@ -118,10 +118,25 @@
     });
   }
 
+  /* ---------- برندها: کارت‌ها یک‌بار تکرار می‌شوند تا ردیف بی‌وقفه حرکت کند ---------- */
+  var track = document.querySelector('.brand-track');
+  if (track && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    var cards = Array.prototype.slice.call(track.children);
+    cards.forEach(function (card) {
+      var copy = card.cloneNode(true);
+      copy.setAttribute('aria-hidden', 'true');
+      copy.querySelectorAll('img').forEach(function (img) { img.alt = ''; });
+      track.appendChild(copy);
+    });
+    track.style.setProperty('--dur', cards.length * 8 + 's');
+    track.classList.add('moving');
+  }
+
   /* ---------- سامانه‌های کارکنان: نشانی = همین سرور + پورت هر سامانه ---------- */
   var PORTS = { pichak: 8081, bime: 8082 }, HOSTS = {};
   // روی دامنه (پشت ابرآروان) استعلام چک از زیردامنه‌ی خودش باز می‌شود؛ با IP از پورت خودش
   var onDomain = !/^(\d+\.){3}\d+$|^\[|^localhost$/.test(location.hostname);
+  var privateHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.)|^localhost$/.test(location.hostname);
   function portalAddr(name) { return onDomain && HOSTS[name] ? HOSTS[name] : location.hostname + ':' + PORTS[name]; }
   function portalUrl(name) { return location.protocol + '//' + portalAddr(name) + '/'; }
   function paintPortal() {
@@ -135,8 +150,9 @@
       ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; });
       if (p.pichak_host) HOSTS.pichak = p.pichak_host;
       paintPortal();
-      // سامانه‌های داخلی (بیمه و حواله) بیرون از شبکه شرکت اصلاً نشان داده نمی‌شوند
-      if (p.internal === false) document.querySelectorAll('[data-internal]').forEach(function (el) {
+      // سامانه‌های داخلی (بیمه و حواله) بیرون از شبکه شرکت اصلاً نشان داده نمی‌شوند؛
+      // سایتی که با IP خصوصی (داخل شرکت) باز شده همیشه آن را نشان می‌دهد
+      if (p.internal === false && !privateHost) document.querySelectorAll('[data-internal]').forEach(function (el) {
         el.hidden = true; el.parentNode.classList.add('solo');
       });
     }).catch(function () {});
