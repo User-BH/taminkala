@@ -151,17 +151,27 @@
     var items = Array.prototype.slice.call(grid.querySelectorAll('.bs-item')), filter = 'همه', visible = items;
     var ratio = function (el) { return parseFloat(el.style.getPropertyValue('--r')) || 1.6; };
     // کارت‌ها به ردیف‌هایی تقسیم می‌شوند که جمع نسبت‌هایشان نزدیک هم است؛ هر ردیف دقیقاً تمام عرض را پر می‌کند
-    var layout = function () {
-      visible = items.filter(function (el) { return filter === 'همه' || el.getAttribute('data-cat') === filter; });
-      var target = grid.clientWidth < 600 ? 3.2 : 6.6;
-      var total = visible.reduce(function (t, el) { return t + ratio(el); }, 0);
+    var split = function (list, target) {
+      if (!list.length) return [];
+      var total = list.reduce(function (t, el) { return t + ratio(el); }, 0);
       var n = Math.max(1, Math.round(total / target)), rows = [], cur = [], sum = 0;
-      visible.forEach(function (el, i) {
+      list.forEach(function (el, i) {
         cur.push(el); sum += ratio(el);
         var rowsLeft = n - rows.length - 1;
-        if (rowsLeft > 0 && (sum >= total / n - 0.6 || visible.length - i - 1 === rowsLeft)) { rows.push(cur); cur = []; sum = 0; }
+        if (rowsLeft > 0 && (sum >= total / n - 0.6 || list.length - i - 1 === rowsLeft)) { rows.push(cur); cur = []; sum = 0; }
       });
       if (cur.length) rows.push(cur);
+      return rows;
+    };
+    var layout = function () {
+      visible = items.filter(function (el) { return filter === 'همه' || el.getAttribute('data-cat') === filter; });
+      // برندهای اصلی (data-featured) اول و در ردیف‌های کم‌جمعیت‌تر، یعنی کارت‌های بزرگ‌تر
+      var big = visible.filter(function (el) { return el.hasAttribute('data-featured'); });
+      var rest = visible.filter(function (el) { return !el.hasAttribute('data-featured'); });
+      visible = big.concat(rest);
+      var phone = grid.clientWidth < 600;
+      // گوشی: هر برند اصلی یک ردیف کامل
+      var rows = (phone ? big.map(function (el) { return [el]; }) : split(big, 4.8)).concat(split(rest, phone ? 2.6 : 7));
       grid.textContent = '';
       rows.forEach(function (r) {
         var row = document.createElement('div'); row.className = 'bs-row';
@@ -172,12 +182,17 @@
     };
     later(layout);
     var rsz; window.addEventListener('resize', function () { clearTimeout(rsz); rsz = setTimeout(layout, 150); });
+    var setFilter = function (f) {
+      filter = f;
+      document.querySelectorAll('.bs-tabs button').forEach(function (b) { var on = b.getAttribute('data-filter') === f; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+      layout();
+    };
     document.querySelectorAll('.bs-tabs button').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        filter = btn.getAttribute('data-filter');
-        document.querySelectorAll('.bs-tabs button').forEach(function (b) { var on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-        layout();
-      });
+      btn.addEventListener('click', function () { setFilter(btn.getAttribute('data-filter')); });
+    });
+    // «برندهای این گروه» در کارت‌های حوزه فعالیت: فیلتر همان دسته را روشن می‌کند
+    document.querySelectorAll('[data-brand-filter]').forEach(function (a) {
+      a.addEventListener('click', function () { setFilter(a.getAttribute('data-brand-filter')); });
     });
 
     var pop = document.getElementById('brandPop'), at = 0;

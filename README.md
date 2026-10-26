@@ -125,7 +125,7 @@ sudo taminkala doctor
 | `public/assets/img/photos/fleet.jpg` | عکس اصلی بالای صفحه |
 | `photos/office.webp`، `courtyard.webp`، `warehouse-overview.webp` | بخش درباره ما (ساختمان اداری، محوطه، انبار) |
 | `photos/warehouse-panorama.webp` | پانورامای «زیرساخت» با حرکت هنگام اسکرول |
-| `photos/office-building.webp`، `warehouse-aisles.webp`، `warehouse-variety.webp`، `building.jpg`، `warehouse-homecare.webp`، `warehouse-capacity.webp` | گالری (`#gallery`) با نمایش کامل در پنجره |
+| `photos/office-building.webp`، `warehouse-aisles.webp`، `warehouse-variety.webp`، `building.jpg`، `warehouse-homecare.webp` | گالری (`#gallery`) با نمایش کامل در پنجره |
 | `public/assets/img/brands/*.jpg` | ویترین برندها (هر نسبتی؛ بدون برش) |
 
 بعد از افزودن یا عوض کردن هر عکس (jpg در `photos/` یا `brands/`) اجرا کنید: `python3 tools/images.py` — نسخه‌های WebP در اندازه‌های مختلف (`w/`)، لوگوهای کوچک و تصویر اشتراک‌گذاری (`og-image.jpg`) ساخته می‌شوند.
