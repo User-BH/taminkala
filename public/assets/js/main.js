@@ -148,64 +148,71 @@
     if (panoImg.complete) panoLayout(); else panoImg.addEventListener('load', panoLayout);
   }
 
-  /* ---------- برندها: ردیف خودکار حرکت می‌کند و دستی هم ورق می‌خورد ----------
-     کارت‌ها دو بار تکرار می‌شوند؛ وقتی موقعیت از طول یک دور گذشت، بی‌صدا به ابتدا برمی‌گردد. */
-  var mq = document.querySelector('.brand-marquee'), track = mq && mq.querySelector('.brand-track');
-  if (track) {
-    var originals = Array.prototype.slice.call(track.children);
-    for (var k = 0; k < 2; k++) originals.forEach(function (card) {
-      var copy = card.cloneNode(true);
-      copy.setAttribute('aria-hidden', 'true');
-      copy.querySelectorAll('img').forEach(function (img) { img.alt = ''; });
-      track.appendChild(copy);
-    });
-    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var SPEED = 36, pos = 0, last = 0, hover = false, holdUntil = 0, drag = null;
-    var loop = function () { return track.children[originals.length].offsetLeft - track.children[0].offsetLeft; };
-    var step = function () { return track.children[0].offsetWidth + parseFloat(getComputedStyle(track).columnGap || 22); };
-    var hold = function (ms) { holdUntil = performance.now() + (ms || 2500); };
-    var wrap = function () {
-      var L = loop(), x = mq.scrollLeft;
-      if (x >= L) mq.scrollLeft = x - L; else if (x <= 0) mq.scrollLeft = x + L;
+  /* ---------- برندها: فیلتر دسته‌بندی، ردیف‌های تمام‌عرض و پنجره‌ی برند ---------- */
+  var grid = document.getElementById('brandGrid');
+  if (grid) {
+    var items = Array.prototype.slice.call(grid.querySelectorAll('.bs-item')), filter = 'همه', visible = items;
+    var ratio = function (el) { return parseFloat(el.style.getPropertyValue('--r')) || 1.6; };
+    // کارت‌ها به ردیف‌هایی تقسیم می‌شوند که جمع نسبت‌هایشان نزدیک هم است؛ هر ردیف دقیقاً تمام عرض را پر می‌کند
+    var layout = function () {
+      visible = items.filter(function (el) { return filter === 'همه' || el.getAttribute('data-cat') === filter; });
+      var target = grid.clientWidth < 600 ? 3.2 : 6.6;
+      var total = visible.reduce(function (t, el) { return t + ratio(el); }, 0);
+      var n = Math.max(1, Math.round(total / target)), rows = [], cur = [], sum = 0;
+      visible.forEach(function (el, i) {
+        cur.push(el); sum += ratio(el);
+        var rowsLeft = n - rows.length - 1;
+        if (rowsLeft > 0 && (sum >= total / n - 0.6 || visible.length - i - 1 === rowsLeft)) { rows.push(cur); cur = []; sum = 0; }
+      });
+      if (cur.length) rows.push(cur);
+      grid.textContent = '';
+      rows.forEach(function (r) {
+        var row = document.createElement('div'); row.className = 'bs-row';
+        r.forEach(function (el) { row.appendChild(el); });
+        grid.appendChild(row);
+      });
+      grid.classList.add('rows');
     };
-    mq.scrollLeft = loop();   // از وسط شروع می‌شود تا دو طرف جا برای ورق زدن باشد
-    pos = mq.scrollLeft;
-    (function tick(t) {
-      var dt = last ? Math.min(t - last, 64) / 1000 : 0; last = t;
-      if (!still && !hover && !drag && t > holdUntil) {
-        pos += SPEED * dt;
-        var L = loop();
-        if (pos >= 2 * L) pos -= L;
-        mq.scrollLeft = pos;
-      } else {
-        if (!drag && t > holdUntil - 2000) wrap();
-        pos = mq.scrollLeft;
-      }
-      requestAnimationFrame(tick);
-    })(0);
-    mq.addEventListener('mouseenter', function () { hover = true; });
-    mq.addEventListener('mouseleave', function () { hover = false; });
-    mq.addEventListener('touchstart', function () { hold(4000); }, { passive: true });
-    mq.addEventListener('touchmove', function () { hold(4000); }, { passive: true });
-    mq.addEventListener('wheel', function () { hold(3000); }, { passive: true });
-    mq.addEventListener('focusin', function () { hold(6000); });
-    mq.addEventListener('pointerdown', function (e) {   // کشیدن با ماوس
-      if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      drag = { x: e.clientX, left: mq.scrollLeft };
-      mq.classList.add('dragging');
+    layout();
+    var rsz; window.addEventListener('resize', function () { clearTimeout(rsz); rsz = setTimeout(layout, 150); });
+    document.querySelectorAll('.bs-tabs button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        filter = btn.getAttribute('data-filter');
+        document.querySelectorAll('.bs-tabs button').forEach(function (b) { var on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+        layout();
+      });
     });
-    window.addEventListener('pointermove', function (e) { if (drag) mq.scrollLeft = drag.left - (e.clientX - drag.x); });
-    window.addEventListener('pointerup', function () { if (drag) { drag = null; mq.classList.remove('dragging'); hold(2500); } });
-    mq.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(e.key === 'ArrowRight' ? -1 : 1); }
-    });
-    function go(dir) {   // dir=1: برند بعدی (به چپ)، dir=-1: برند قبلی
-      wrap(); hold(3500);
-      mq.scrollBy({ left: dir * step(), behavior: still ? 'auto' : 'smooth' });
+
+    var pop = document.getElementById('brandPop'), at = 0;
+    var show = function (i) {
+      at = (i + visible.length) % visible.length;
+      var el = visible[at], img = el.querySelector('img');
+      document.getElementById('bpImg').src = img.currentSrc || img.src;
+      document.getElementById('bpImg').alt = img.alt;
+      document.getElementById('bpName').textContent = el.querySelector('b').textContent;
+      document.getElementById('bpCo').textContent = el.querySelector('small').textContent;
+      document.getElementById('bpTag').textContent = el.getAttribute('data-cat');
+      document.getElementById('bpCount').textContent = new Intl.NumberFormat('fa-IR').format(at + 1) + ' از ' + new Intl.NumberFormat('fa-IR').format(visible.length);
+    };
+    if (pop && pop.showModal) {
+      grid.addEventListener('click', function (e) {
+        var el = e.target.closest('.bs-item'); if (!el) return;
+        show(visible.indexOf(el)); pop.showModal();
+      });
+      pop.querySelector('.bp-close').addEventListener('click', function () { pop.close(); });
+      pop.querySelector('.bp-prev').addEventListener('click', function () { show(at - 1); });
+      pop.querySelector('.bp-next').addEventListener('click', function () { show(at + 1); });
+      pop.addEventListener('click', function (e) { if (e.target === pop) pop.close(); });   // کلیک بیرون پنجره
+      pop.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') show(at + 1); else if (e.key === 'ArrowRight') show(at - 1);
+      });
+      var tx = null;   // ورق زدن با انگشت
+      pop.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+      pop.addEventListener('touchend', function (e) {
+        if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; tx = null;
+        if (Math.abs(dx) > 50) show(dx < 0 ? at + 1 : at - 1);
+      });
     }
-    var prev = document.querySelector('.bm-prev'), next = document.querySelector('.bm-next');
-    if (prev) prev.addEventListener('click', function () { go(-1); });
-    if (next) next.addEventListener('click', function () { go(1); });
   }
 
   /* ---------- وضعیت باز/بسته بودن شرکت (به وقت تهران: شنبه تا پنجشنبه ۷ تا ۱۷) ---------- */

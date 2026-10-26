@@ -125,9 +125,9 @@ sudo taminkala doctor
 | `public/assets/img/photos/fleet.jpg` | عکس اصلی بالای صفحه |
 | `public/assets/img/photos/office.jpg`، `building.jpg`، `warehouse.jpg` | بخش درباره ما (ساختمان اداری، ساختمان تابلودار، محوطه) |
 | `public/assets/img/photos/warehouse-pano.jpg` (+ `-1200`) | بنر تمام‌عرض «زیرساخت» با حرکت آرام هنگام اسکرول |
-| `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | کارت برندهای همکار (عمودی یا افقی؛ برای عمودی کلاس `portrait`) |
+| `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | ویترین برندها (هر نسبتی؛ بدون برش) |
 
-برند جدید: یک `<figure class="bc">` در بخش `#brands` فایل `public/index.html` اضافه کنید. عکس‌ها را قبل از آپلود فشرده کنید (حداکثر ~۳۰۰KB).
+برند جدید: یک `<button class="bs-item">` با `data-cat` و `--r` (عرض/ارتفاع عکس) در بخش `#brands` فایل `public/index.html` اضافه کنید. عکس‌ها را قبل از آپلود فشرده کنید (حداکثر ~۳۰۰KB).
 
 ### مواردی که باید با اطلاعات واقعی جایگزین شوند
 - عدد «برند همکار» در بخش آمار (`data-count` و متن همان تگ در `public/index.html`) — مقدار فعلی نمونه است
