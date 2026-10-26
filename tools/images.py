@@ -39,7 +39,7 @@ def main():
         small.save(ROOT / f"logo-{size}.webp", "WEBP", quality=88, method=6)
         small.save(ROOT / f"logo-{size}.png", optimize=True)
     # social preview 1200x630: office photo with the logo
-    og = Image.open(ROOT / "photos" / "office-with-sign.webp").convert("RGB")
+    og = Image.open(ROOT / "photos" / "office.webp").convert("RGB")
     scale = max(1200 / og.width, 630 / og.height)
     og = og.resize((round(og.width * scale), round(og.height * scale)), Image.LANCZOS)
     left, top = (og.width - 1200) // 2, (og.height - 630) // 2
