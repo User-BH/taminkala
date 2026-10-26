@@ -49,6 +49,25 @@
     if (e.target.tagName === 'A') { menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }
   });
 
+  /* ---------- پرش به بخش‌ها: بخش‌های پایین صفحه تا دیده نشوند ارتفاع تخمینی دارند (content-visibility)،
+     پس بعد از رسیدن، اگر جای بخش عوض شده بود، دوباره دقیق تنظیم می‌شود ---------- */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    var id = a && a.getAttribute('href').slice(1), target = id && document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    var pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0, tries = 0;
+    var settle = function () {
+      var off = target.getBoundingClientRect().top - pad;
+      if (Math.abs(off) > 3 && tries++ < 6) { window.scrollBy(0, off); setTimeout(settle, 120); }
+    };
+    target.scrollIntoView({ behavior: 'smooth' });
+    var done = false, finish = function () { if (!done) { done = true; settle(); } };
+    if ('onscrollend' in window) window.addEventListener('scrollend', finish, { once: true });
+    setTimeout(finish, 1200);
+    if (history.replaceState) history.replaceState(null, '', '#' + id);
+  });
+
   /* ---------- لینک فعال منو ---------- */
   var links = menu.querySelectorAll('a[href^="#"]');
   if ('IntersectionObserver' in window) {
@@ -59,31 +78,6 @@
       });
     }, { rootMargin: '-45% 0px -50% 0px' });
     document.querySelectorAll('section[id]').forEach(function (s) { spy.observe(s); });
-  }
-
-  /* ---------- جای عکس‌ها: اگر فایل وجود داشت نمایش داده می‌شود ---------- */
-  document.querySelectorAll('.media[data-src]').forEach(function (box) {
-    var img = new Image();
-    img.alt = box.getAttribute('data-alt') || box.getAttribute('data-label') || '';
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    if (box.getAttribute('data-pos')) img.style.objectPosition = box.getAttribute('data-pos');
-    // تصویر باید داخل صفحه باشد تا lazy کار کند؛ تا بارگذاری نشده پنهان می‌ماند و جای خالی دیده می‌شود
-    img.style.opacity = '0';
-    img.onload = function () { img.style.opacity = ''; box.classList.add('has-img'); };
-    img.onerror = function () { img.remove(); };
-    box.appendChild(img);
-    img.src = box.getAttribute('data-src');
-  });
-
-  /* ---------- نوار برندها: تکرار برای حرکت بی‌پایان ---------- */
-  var track = document.querySelector('.brands-track');
-  if (track) {
-    Array.prototype.slice.call(track.children).forEach(function (n) {
-      var c = n.cloneNode(true);
-      c.setAttribute('aria-hidden', 'true');
-      track.appendChild(c);
-    });
   }
 
   /* ---------- ظاهر شدن تدریجی و شمارنده‌ها ---------- */
@@ -187,7 +181,7 @@
     var show = function (i) {
       at = (i + visible.length) % visible.length;
       var el = visible[at], img = el.querySelector('img');
-      document.getElementById('bpImg').src = img.currentSrc || img.src;
+      document.getElementById('bpImg').src = img.getAttribute('data-full') || img.currentSrc || img.src;
       document.getElementById('bpImg').alt = img.alt;
       document.getElementById('bpName').textContent = el.querySelector('b').textContent;
       document.getElementById('bpCo').textContent = el.querySelector('small').textContent;

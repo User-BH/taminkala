@@ -1,0 +1,13 @@
+{
+  "name": "تأمین کالا باختر",
+  "short_name": "تأمین کالا",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#f7f3ef",
+  "theme_color": "#991522",
+  "icons": [
+    { "src": "/assets/img/logo-192.png", "sizes": "192x192", "type": "image/png" }
+  ]
+}

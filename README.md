@@ -127,7 +127,14 @@ sudo taminkala doctor
 | `public/assets/img/photos/warehouse-pano.jpg` (+ `-1200`) | بنر تمام‌عرض «زیرساخت» با حرکت آرام هنگام اسکرول |
 | `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | ویترین برندها (هر نسبتی؛ بدون برش) |
 
+بعد از افزودن یا عوض کردن هر عکس (jpg در `photos/` یا `brands/`) اجرا کنید: `python3 tools/images.py` — نسخه‌های WebP در اندازه‌های مختلف (`w/`)، لوگوهای کوچک و تصویر اشتراک‌گذاری (`og-image.jpg`) ساخته می‌شوند.
+
 برند جدید: یک `<button class="bs-item">` با `data-cat` و `--r` (عرض/ارتفاع عکس) در بخش `#brands` فایل `public/index.html` اضافه کنید. عکس‌ها را قبل از آپلود فشرده کنید (حداکثر ~۳۰۰KB).
+
+### سئو و سرعت
+- Lighthouse (موبایل/دسکتاپ): Performance ۹۹/۱۰۰، Accessibility، Best Practices و SEO هر سه ۱۰۰.
+- داده‌ی ساختاریافته‌ی JSON-LD (WholesaleStore: نشانی، تلفن، ساعات کاری، مختصات، برندها)، `robots.txt`، `sitemap.xml`، `manifest.webmanifest`، Open Graph با تصویر ۱۲۰۰×۶۳۰.
+- فونت وزیرمتن روی خود سرور (`assets/fonts`، بدون وابستگی به CDN خارجی)، تصاویر WebP واکنش‌گرا، فشرده‌سازی gzip و کش در `windows/server.py`.
 
 ### مواردی که باید با اطلاعات واقعی جایگزین شوند
 - عدد «برند همکار» در بخش آمار (`data-count` و متن همان تگ در `public/index.html`) — مقدار فعلی نمونه است

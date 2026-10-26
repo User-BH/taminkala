@@ -18,6 +18,7 @@ import ipaddress
 import json
 import logging
 import logging.handlers
+import gzip
 import mimetypes
 import os
 import sys
@@ -38,6 +39,20 @@ mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("image/svg+xml", ".svg")
 mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
+mimetypes.add_type("application/xml", ".xml")
+COMPRESSIBLE = ("text/", "application/javascript", "application/json", "application/manifest+json", "application/xml", "image/svg+xml")
+_GZ_CACHE: dict = {}   # (path, mtime) -> gzipped bytes
+
+
+def _gzipped(file: Path) -> bytes:
+    st = file.stat()
+    key = (str(file), st.st_mtime_ns)
+    if key not in _GZ_CACHE:
+        if len(_GZ_CACHE) > 200:
+            _GZ_CACHE.clear()
+        _GZ_CACHE[key] = gzip.compress(file.read_bytes(), 6)
+    return _GZ_CACHE[key]
 
 
 def load_config() -> dict:
@@ -145,10 +160,18 @@ def static_app(root: Path, extra_roots: dict[str, Path] | None = None, extra_fil
         ctype = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
         if ctype.startswith("text/") or ctype in ("application/javascript", "application/json", "image/svg+xml"):
             ctype += "; charset=utf-8"
-        cache = "no-cache" if file.suffix == ".html" else "public, max-age=604800"
-        headers = [("Content-Type", ctype), ("Content-Length", str(file.stat().st_size)), ("Cache-Control", cache),
-                   ("X-Content-Type-Options", "nosniff")]
-        start_response("200 OK", headers)
+        if file.suffix == ".html" or file.name in ("robots.txt", "sitemap.xml", "manifest.webmanifest"):
+            cache = "no-cache"
+        elif file.suffix == ".woff2":   # the font never changes in place
+            cache = "public, max-age=31536000, immutable"
+        else:
+            cache = "public, max-age=604800"
+        headers = [("Content-Type", ctype), ("Cache-Control", cache), ("X-Content-Type-Options", "nosniff"), ("Vary", "Accept-Encoding")]
+        if ctype.startswith(COMPRESSIBLE) and "gzip" in environ.get("HTTP_ACCEPT_ENCODING", ""):
+            body = _gzipped(file)
+            start_response("200 OK", headers + [("Content-Encoding", "gzip"), ("Content-Length", str(len(body)))])
+            return [] if environ["REQUEST_METHOD"] == "HEAD" else [body]
+        start_response("200 OK", headers + [("Content-Length", str(file.stat().st_size))])
         if environ["REQUEST_METHOD"] == "HEAD":
             return []
         return environ["wsgi.file_wrapper"](file.open("rb"), 65536) if "wsgi.file_wrapper" in environ else [file.read_bytes()]

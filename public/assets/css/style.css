@@ -4,6 +4,12 @@
    رنگ‌ها و زبان طراحی هم‌راستا با سامانه‌های پیچک و بیمه/حواله
    ========================================================== */
 
+/* فونت وزیرمتن (متغیر، روی همین سرور؛ مجوز: assets/fonts/OFL.txt) */
+@font-face {
+  font-family: Vazirmatn;
+  src: url('../fonts/Vazirmatn-wght.woff2') format('woff2-variations'), url('../fonts/Vazirmatn-wght.woff2') format('woff2');
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
 :root {
   --red: #cf1725;
   --red-2: #e5394a;
@@ -533,6 +539,8 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
 
 /* ---------- انیمیشن ظاهر شدن ---------- */
+/* بخش‌های پایین صفحه تا نزدیک دید نیایند چیده و رسم نمی‌شوند (سرعت بارگذاری در گوشی) */
+#about, #products, #services, #process, #brands, #partner, #contact { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s ease, transform .8s ease; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
