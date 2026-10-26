@@ -123,9 +123,10 @@ sudo taminkala doctor
 | فایل | محل نمایش |
 |---|---|
 | `public/assets/img/photos/fleet.jpg` | عکس اصلی بالای صفحه |
-| `public/assets/img/photos/office.jpg`، `building.jpg`، `warehouse.jpg` | بخش درباره ما (ساختمان اداری، ساختمان تابلودار، محوطه) |
-| `public/assets/img/photos/warehouse-pano.jpg` (+ `-1200`) | بنر تمام‌عرض «زیرساخت» با حرکت آرام هنگام اسکرول |
-| `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | ویترین برندها (هر نسبتی؛ بدون برش) |
+| `photos/office-with-sign.webp`، `courtyard.webp`، `warehouse-overview.webp` | بخش درباره ما (ساختمان اداری، محوطه، انبار) |
+| `photos/warehouse-panorama.webp` | پانورامای «زیرساخت» با حرکت هنگام اسکرول |
+| `photos/office-building.webp`، `warehouse-aisles.webp`، `warehouse-variety.webp`، `building.jpg`، `warehouse-homecare.webp`، `warehouse-capacity.webp` | گالری (`#gallery`) با نمایش کامل در پنجره |
+| `public/assets/img/brands/*.jpg` | ویترین برندها (هر نسبتی؛ بدون برش) |
 
 بعد از افزودن یا عوض کردن هر عکس (jpg در `photos/` یا `brands/`) اجرا کنید: `python3 tools/images.py` — نسخه‌های WebP در اندازه‌های مختلف (`w/`)، لوگوهای کوچک و تصویر اشتراک‌گذاری (`og-image.jpg`) ساخته می‌شوند.
 

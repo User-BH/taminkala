@@ -2,7 +2,7 @@
 
     python3 tools/images.py
 
-For every JPG/PNG in public/assets/img/{photos,brands} it writes
+For every JPG/WebP master in public/assets/img/{photos,brands} it writes
 public/assets/img/<dir>/w/<name>-<width>.webp for the widths below (never upscaled),
 plus small logo files. Run it again after adding or replacing a photo.
 Designed and developed by Rahvar Peyvand Dadeh
@@ -26,7 +26,7 @@ def main():
         src_dir = ROOT / folder
         out_dir = src_dir / "w"
         out_dir.mkdir(exist_ok=True)
-        for src in sorted(src_dir.glob("*.jpg")):
+        for src in sorted(list(src_dir.glob("*.jpg")) + list(src_dir.glob("*.webp"))):
             if src.stem.endswith("-1200"):          # old hand-made size, not a master
                 continue
             im = Image.open(src).convert("RGB")
@@ -39,7 +39,7 @@ def main():
         small.save(ROOT / f"logo-{size}.webp", "WEBP", quality=88, method=6)
         small.save(ROOT / f"logo-{size}.png", optimize=True)
     # social preview 1200x630: office photo with the logo
-    og = Image.open(ROOT / "photos" / "office.jpg").convert("RGB")
+    og = Image.open(ROOT / "photos" / "office-with-sign.webp").convert("RGB")
     scale = max(1200 / og.width, 630 / og.height)
     og = og.resize((round(og.width * scale), round(og.height * scale)), Image.LANCZOS)
     left, top = (og.width - 1200) // 2, (og.height - 630) // 2

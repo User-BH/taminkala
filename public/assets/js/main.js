@@ -112,6 +112,9 @@
     });
   }
 
+  // اندازه‌گیری بخش‌های پایین صفحه بعد از اولین نمایش، تا بارگذاری اولیه سریع بماند
+  var later = window.requestIdleCallback ? function (f) { requestIdleCallback(f, { timeout: 1500 }); } : function (f) { setTimeout(f, 300); };
+
   /* ---------- پانورامای انبار: بخش sticky است؛ اسکرول عمودی داخل آن فقط تصویر را به راست می‌برد ---------- */
   var infra = document.querySelector('.infra'), stage = infra && infra.querySelector('.infra-sticky'),
       panoBox = infra && infra.querySelector('.infra-media'), panoImg = panoBox && panoBox.querySelector('img'),
@@ -139,7 +142,7 @@
     };
     window.addEventListener('scroll', function () { if (!panoQueued) { panoQueued = true; requestAnimationFrame(panoMove); } }, { passive: true });
     window.addEventListener('resize', panoLayout);
-    if (panoImg.complete) panoLayout(); else panoImg.addEventListener('load', panoLayout);
+    later(function () { if (panoImg.complete) panoLayout(); else panoImg.addEventListener('load', panoLayout); });
   }
 
   /* ---------- برندها: فیلتر دسته‌بندی، ردیف‌های تمام‌عرض و پنجره‌ی برند ---------- */
@@ -167,7 +170,7 @@
       });
       grid.classList.add('rows');
     };
-    layout();
+    later(layout);
     var rsz; window.addEventListener('resize', function () { clearTimeout(rsz); rsz = setTimeout(layout, 150); });
     document.querySelectorAll('.bs-tabs button').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -207,6 +210,32 @@
         if (Math.abs(dx) > 50) show(dx < 0 ? at + 1 : at - 1);
       });
     }
+  }
+
+  /* ---------- گالری: عکس کامل در پنجره (Esc، دکمه‌ی بستن، کلیک بیرون، قبلی/بعدی، کشیدن انگشت) ---------- */
+  var gal = Array.prototype.slice.call(document.querySelectorAll('.g-open')), gp = document.getElementById('galPop');
+  if (gal.length && gp && gp.showModal) {
+    var gAt = 0, num = new Intl.NumberFormat('fa-IR');
+    var gShow = function (i) {
+      gAt = (i + gal.length) % gal.length;
+      var btn = gal[gAt], im = btn.querySelector('img');
+      document.getElementById('gpImg').src = btn.getAttribute('data-full');
+      document.getElementById('gpImg').alt = im.alt;
+      document.getElementById('gpCap').textContent = btn.parentNode.querySelector('figcaption').textContent;
+      document.getElementById('gpCount').textContent = num.format(gAt + 1) + ' از ' + num.format(gal.length);
+    };
+    gal.forEach(function (btn, i) { btn.addEventListener('click', function () { gShow(i); gp.showModal(); }); });
+    gp.querySelector('.bp-close').addEventListener('click', function () { gp.close(); });
+    gp.querySelector('.bp-prev').addEventListener('click', function () { gShow(gAt - 1); });
+    gp.querySelector('.bp-next').addEventListener('click', function () { gShow(gAt + 1); });
+    gp.addEventListener('click', function (e) { if (e.target === gp) gp.close(); });
+    gp.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') gShow(gAt + 1); else if (e.key === 'ArrowRight') gShow(gAt - 1); });
+    var gx = null;
+    gp.addEventListener('touchstart', function (e) { gx = e.touches[0].clientX; }, { passive: true });
+    gp.addEventListener('touchend', function (e) {
+      if (gx === null) return; var dx = e.changedTouches[0].clientX - gx; gx = null;
+      if (Math.abs(dx) > 50) gShow(dx < 0 ? gAt + 1 : gAt - 1);
+    });
   }
 
   /* ---------- وضعیت باز/بسته بودن شرکت (به وقت تهران: شنبه تا پنجشنبه ۷ تا ۱۷) ---------- */

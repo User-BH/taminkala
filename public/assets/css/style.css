@@ -313,6 +313,31 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
   .infra.static .infra-text { position: static; padding: 8px 0 44px; }
 }
 
+/* کپشن روی عکس‌های «درباره ما» */
+figure.media { margin: 0; }
+.media-cap { position: absolute; z-index: 1; right: 10px; bottom: 10px; font-size: 12px; font-weight: 800; color: #fff; padding: 4px 11px; border-radius: 99px;
+  background: rgba(20,12,12,.55); backdrop-filter: blur(6px); border: 1px solid #ffffff2e; }
+.infra-more { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; font-size: 13.5px; font-weight: 800; color: #ffb3ac; }
+.infra-more:hover { color: #fff; }
+.infra-more svg { width: 16px; height: 16px; }
+
+/* ---------- گالری ---------- */
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.g-item { margin: 0; }
+.g-open { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; border-radius: 18px; overflow: hidden; background: var(--bg-2);
+  aspect-ratio: 4 / 4.6; box-shadow: var(--shadow); position: relative; }
+.g-open img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+.g-open::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(15,8,9,.35), transparent 40%); opacity: 0; transition: opacity .3s; }
+.g-open:hover img { transform: scale(1.05); }
+.g-open:hover::after { opacity: 1; }
+.g-open:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.g-item figcaption { margin-top: 10px; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.g-item figcaption::before { content: ''; width: 18px; height: 3px; border-radius: 3px; background: var(--red); }
+.gal-pop .bp-body h3 { margin: 0; font-size: 17px; }
+.gal-pop img { max-height: calc(100vh - 140px); }
+@media (max-width: 1080px) { .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .gallery { gap: 12px; } .g-open { border-radius: 14px; } .g-item figcaption { font-size: 12.5px; margin-top: 7px; } }
+
 /* ---------- دسته‌بندی‌ها (هر کارت رنگ خودش را از --c می‌گیرد) ---------- */
 .cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
 .cat {
@@ -540,7 +565,7 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 
 /* ---------- انیمیشن ظاهر شدن ---------- */
 /* بخش‌های پایین صفحه تا نزدیک دید نیایند چیده و رسم نمی‌شوند (سرعت بارگذاری در گوشی) */
-#about, #products, #services, #process, #brands, #partner, #contact { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+#about, #gallery, #products, #services, #process, #brands, #partner, #contact { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s ease, transform .8s ease; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
