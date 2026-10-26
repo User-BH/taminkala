@@ -118,23 +118,34 @@
     });
   }
 
-  /* ---------- پانورامای انبار: با اسکرول خیلی آرام از راست به چپ حرکت می‌کند ---------- */
-  var pano = document.querySelector('.infra-media'), panoImg = pano && pano.querySelector('img');
-  if (panoImg && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-    var panoQueued = false;
+  /* ---------- پانورامای انبار: بخش sticky است؛ اسکرول عمودی داخل آن فقط تصویر را به راست می‌برد ---------- */
+  var infra = document.querySelector('.infra'), stage = infra && infra.querySelector('.infra-sticky'),
+      panoBox = infra && infra.querySelector('.infra-media'), panoImg = panoBox && panoBox.querySelector('img'),
+      panoBar = infra && infra.querySelector('.infra-progress span');
+  if (panoImg) {
+    var room = 0, panoQueued = false;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var panoLayout = function () {
+      var off = reduce || window.innerHeight < 520;   // صفحه‌ی خیلی کوتاه (گوشی افقی): بدون سنجاق
+      infra.classList.toggle('static', off);
+      if (off) { infra.style.height = ''; room = 0; return; }
+      room = Math.max(0, panoImg.offsetWidth - panoBox.offsetWidth);
+      // هر پیکسل حرکت افقی ≈ ۱٫۲ پیکسل اسکرول تا حرکت آرام و قابل کنترل باشد
+      infra.style.height = (stage.offsetHeight + room * 1.2) + 'px';
+      panoMove();
+    };
     var panoMove = function () {
       panoQueued = false;
-      var r = pano.getBoundingClientRect(), vh = window.innerHeight;
-      if (r.bottom < 0 || r.top > vh) return;
-      var prog = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));   // ۰ وقتی وارد می‌شود، ۱ وقتی خارج می‌شود
-      var room = panoImg.offsetWidth - pano.offsetWidth;
+      if (!room) return;
+      var total = infra.offsetHeight - stage.offsetHeight;
+      var prog = Math.min(1, Math.max(0, -infra.getBoundingClientRect().top / total));
       panoImg.style.transform = 'translate3d(' + (-prog * room).toFixed(1) + 'px,0,0)';
+      if (panoBar) panoBar.style.setProperty('--p', prog.toFixed(4));
+      infra.classList.toggle('moved', prog > 0.04);
     };
-    var panoQueue = function () { if (!panoQueued) { panoQueued = true; requestAnimationFrame(panoMove); } };
-    window.addEventListener('scroll', panoQueue, { passive: true });
-    window.addEventListener('resize', panoQueue);
-    panoImg.addEventListener('load', panoQueue);
-    panoQueue();
+    window.addEventListener('scroll', function () { if (!panoQueued) { panoQueued = true; requestAnimationFrame(panoMove); } }, { passive: true });
+    window.addEventListener('resize', panoLayout);
+    if (panoImg.complete) panoLayout(); else panoImg.addEventListener('load', panoLayout);
   }
 
   /* ---------- برندها: ردیف خودکار حرکت می‌کند و دستی هم ورق می‌خورد ----------

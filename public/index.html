@@ -192,26 +192,30 @@
   </div>
 </section>
 
-<!-- ============ زیرساخت (پانورامای انبار؛ با اسکرول آرام از راست به چپ حرکت می‌کند) ============ -->
+<!-- ============ زیرساخت: پانورامای انبار؛ بخش هنگام اسکرول ثابت می‌ماند و فقط تصویر به راست حرکت می‌کند ============ -->
 <section class="infra" id="infra" aria-labelledby="infra-title">
-  <div class="infra-media">
-    <img src="assets/img/photos/warehouse-pano.jpg" srcset="assets/img/photos/warehouse-pano-1200.jpg 1200w, assets/img/photos/warehouse-pano.jpg 2000w"
-         sizes="(max-width: 760px) 1200px, 2000px" width="2000" height="694" loading="lazy" decoding="async"
-         alt="نمای پانورامای انبار تأمین کالا باختر با قفسه‌بندی صنعتی و پالت‌های کالا">
-  </div>
-  <div class="infra-text">
-    <div class="wrap">
-      <div class="infra-box reveal">
-        <span class="eyebrow">زیرساخت و توانمندی‌ها</span>
-        <h2 id="infra-title">از تأمین تا اطمینان</h2>
-        <p>زیرساختی برای نگهداری و تأمین کالا؛ انبار مسقف و قفسه‌بندی‌شده تا هر سفارش سالم، کامل و به‌موقع آماده‌ی ارسال باشد.</p>
-        <ul class="infra-chips">
-          <li><svg class="i"><use href="#i-warehouse"/></svg>انبار مسقف و روشن</li>
-          <li><svg class="i"><use href="#i-box"/></svg>قفسه‌بندی صنعتی</li>
-          <li><svg class="i"><use href="#i-check"/></svg>کنترل دقیق موجودی</li>
-        </ul>
+  <div class="infra-sticky">
+    <div class="infra-media">
+      <img src="assets/img/photos/warehouse-pano.jpg" srcset="assets/img/photos/warehouse-pano-1200.jpg 1200w, assets/img/photos/warehouse-pano.jpg 2000w"
+           sizes="(max-width: 760px) 1200px, 2000px" width="2000" height="694" decoding="async"
+           alt="نمای پانورامای انبار تأمین کالا باختر با قفسه‌بندی صنعتی و پالت‌های کالا">
+    </div>
+    <div class="infra-text">
+      <div class="wrap">
+        <div class="infra-box">
+          <span class="eyebrow">زیرساخت و توانمندی‌ها</span>
+          <h2 id="infra-title">از تأمین تا اطمینان</h2>
+          <p>زیرساختی برای نگهداری و تأمین کالا؛ انبار مسقف و قفسه‌بندی‌شده تا هر سفارش سالم، کامل و به‌موقع آماده‌ی ارسال باشد.</p>
+          <ul class="infra-chips">
+            <li><svg class="i"><use href="#i-warehouse"/></svg>انبار مسقف و روشن</li>
+            <li><svg class="i"><use href="#i-box"/></svg>قفسه‌بندی صنعتی</li>
+            <li><svg class="i"><use href="#i-check"/></svg>کنترل دقیق موجودی</li>
+          </ul>
+        </div>
       </div>
     </div>
+    <span class="infra-hint" aria-hidden="true"><span class="mouse"></span>برای گشتن در انبار اسکرول کنید</span>
+    <div class="infra-progress" aria-hidden="true"><span></span></div>
   </div>
 </section>
 

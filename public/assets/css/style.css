@@ -259,31 +259,52 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .checks li { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
 .checks li svg { color: var(--good); }
 
-/* ---------- زیرساخت: پانورامای تمام‌عرض انبار ---------- */
-.infra { position: relative; background: #151012; color: #f3e9e7; }
-.infra-media { position: relative; height: clamp(400px, 44vw, 620px); overflow: hidden; }
-.infra-media img { position: absolute; top: 0; left: 0; height: 100%; width: auto; min-width: 118%; max-width: none; object-fit: cover; will-change: transform; }
+/* ---------- زیرساخت: پانورامای انبار با «اسکرول افقیِ سنجاق‌شده» ----------
+   ارتفاع بخش = یک صفحه + مسافت حرکت تصویر (main.js حساب می‌کند)؛ قاب داخلی sticky است،
+   پس هنگام اسکرول، صفحه پایین نمی‌رود و فقط تصویر به راست حرکت می‌کند. */
+.infra { position: relative; background: #151012; color: #f3e9e7; height: 260vh; }
+.infra-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.infra-media { position: absolute; inset: 0; overflow: hidden; }
+.infra-media img { position: absolute; top: 0; left: 0; height: 100%; width: auto; min-width: 100%; max-width: none; object-fit: cover; will-change: transform; }
 .infra-media::after { content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(270deg, rgba(16,9,10,.9) 0%, rgba(16,9,10,.6) 32%, rgba(16,9,10,0) 62%),
-              linear-gradient(0deg, rgba(16,9,10,.55), rgba(16,9,10,0) 45%); }
-.infra-text { position: absolute; inset: 0; z-index: 1; display: flex; align-items: flex-end; padding-bottom: clamp(36px, 5vw, 64px); pointer-events: none; }
+  background: linear-gradient(270deg, rgba(16,9,10,.88) 0%, rgba(16,9,10,.55) 30%, rgba(16,9,10,0) 58%),
+              linear-gradient(0deg, rgba(16,9,10,.6), rgba(16,9,10,0) 40%),
+              linear-gradient(180deg, rgba(16,9,10,.55), rgba(16,9,10,0) 22%); }
+.infra-text { position: absolute; inset: 0; z-index: 1; display: flex; align-items: flex-end; padding-bottom: clamp(56px, 9vh, 96px); pointer-events: none; }
 .infra-text .wrap { width: 100%; }
 .infra-box { max-width: 500px; pointer-events: auto; }
 .infra .eyebrow { background: #ffffff14; color: #ffb3ac; border: 1px solid #ffffff22; }
-.infra h2 { font-size: clamp(30px, 4.2vw, 50px); font-weight: 900; color: #fff; line-height: 1.25; margin: 12px 0 10px; }
+.infra h2 { font-size: clamp(30px, 4.2vw, 52px); font-weight: 900; color: #fff; line-height: 1.25; margin: 12px 0 10px; }
 .infra p { color: #e4d3d0; font-size: 15px; margin: 0; }
 .infra-chips { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .infra-chips li { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; padding: 7px 13px; border-radius: 99px;
   background: #ffffff12; border: 1px solid #ffffff22; backdrop-filter: blur(6px); }
 .infra-chips svg { width: 16px; height: 16px; color: #ff8a93; }
-@media (max-width: 760px) {   /* موبایل: تیتر زیر عکس تا کارتن‌ها و قفسه‌ها پنهان نشوند */
-  .infra-media { height: 250px; }
-  .infra-media img { min-width: 135%; }
-  .infra-media::after { background: linear-gradient(0deg, #151012, rgba(21,16,18,0) 40%); }
-  .infra-text { position: static; display: block; padding: 4px 0 44px; }
+.infra-progress { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; height: 4px; background: #ffffff1a; }
+.infra-progress span { display: block; height: 100%; background: linear-gradient(90deg, #ff7a85, var(--red)); transform: scaleX(var(--p, 0)); transform-origin: left; }
+.infra-hint { position: absolute; z-index: 2; left: 50%; bottom: 22px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px;
+  font-size: 12.5px; font-weight: 700; color: #fff; padding: 7px 14px 7px 12px; border-radius: 99px; background: #00000059; border: 1px solid #ffffff26;
+  backdrop-filter: blur(6px); transition: opacity .4s; white-space: nowrap; }
+.infra-hint .mouse { width: 16px; height: 24px; border: 2px solid #fff; border-radius: 10px; position: relative; flex: none; }
+.infra-hint .mouse::after { content: ''; position: absolute; left: 50%; top: 4px; width: 2px; height: 5px; margin-left: -1px; border-radius: 2px; background: #fff; animation: wheel 1.6s infinite; }
+@keyframes wheel { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(8px); } }
+.infra.moved .infra-hint { opacity: 0; }
+@media (max-width: 760px) {   /* موبایل: عکس بالای قاب، تیتر زیر عکس تا کارتن‌ها و قفسه‌ها پنهان نشوند */
+  .infra-media { bottom: auto; height: 54%; }
+  .infra-media::after { background: linear-gradient(0deg, #151012, rgba(21,16,18,0) 35%), linear-gradient(180deg, rgba(16,9,10,.6), rgba(16,9,10,0) 30%); }
+  .infra-text { top: 54%; align-items: flex-start; padding: 6px 0 0; }
+  .infra-hint { top: calc(54% - 46px); bottom: auto; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .infra-media img { min-width: 100%; width: 100%; transform: none !important; }
+/* بدون حرکت (کاهش حرکت در تنظیمات دستگاه یا صفحه‌ی خیلی کوتاه): عکس کامل و ثابت */
+.infra.static { height: auto; }
+.infra.static .infra-sticky { position: relative; height: auto; }
+.infra.static .infra-media { position: relative; inset: auto; height: auto; }
+.infra.static .infra-media img { position: static; width: 100%; height: auto; min-width: 0; transform: none !important; }
+.infra.static .infra-text { position: absolute; }
+.infra.static .infra-hint, .infra.static .infra-progress { display: none; }
+@media (max-width: 760px) {
+  .infra.static .infra-media { height: auto; }
+  .infra.static .infra-text { position: static; padding: 8px 0 44px; }
 }
 
 /* ---------- دسته‌بندی‌ها (هر کارت رنگ خودش را از --c می‌گیرد) ---------- */
