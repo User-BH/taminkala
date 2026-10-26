@@ -168,7 +168,7 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .hero-cats span { font-size: 12.5px; padding: 5px 12px; border-radius: 10px; background: #ffffff12; border: 1px solid #ffffff1f; }
 
 .hero-visual { position: relative; }
-.hero-visual .media { aspect-ratio: 4 / 4.3; border-radius: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+.hero-visual .media { min-height: 0; aspect-ratio: 16 / 9; border-radius: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
 .float-card {
   position: absolute; display: flex; align-items: center; gap: 12px;
   background: rgba(255,255,255,.95); color: #23242a; padding: 12px 16px; border-radius: 18px;
@@ -176,8 +176,8 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 }
 .float-card b { display: block; font-size: 17px; font-weight: 900; }
 .float-card .fi { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #fff1ef; color: var(--red); }
-.float-card.one { right: -22px; bottom: 46px; }
-.float-card.two { left: -26px; top: 40px; animation-delay: -3s; }
+.float-card.one { right: -22px; bottom: -26px; }
+.float-card.two { left: -26px; top: -26px; animation-delay: -3s; }
 @keyframes bob { 50% { transform: translateY(-10px); } }
 
 .hero-wave { position: absolute; bottom: -1px; left: 0; width: 100%; height: 60px; color: var(--bg); z-index: 1; }
@@ -243,12 +243,13 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 
 /* ---------- درباره ما ---------- */
 .about-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 60px; align-items: center; }
-/* سه عکس: ساختمان اداری (بزرگ) + ساختمان تابلودار و محوطه انبارها */
-.about-media { position: relative; display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
-.about-media .media:first-child { grid-row: span 2; aspect-ratio: auto; min-height: 100%; }
-.about-media .media:not(:first-child) { aspect-ratio: 1 / .92; }
+/* سه عکس با نسبت خودشان (بدون برش): ساختمان اداری عریض بالا، ساختمان تابلودار و محوطه زیر آن */
+.about-media { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.about-media .media { min-height: 0; }
+.about-media .media:first-child { grid-column: span 2; aspect-ratio: 1400 / 788; }
+.about-media .media:not(:first-child) { aspect-ratio: 3 / 2; }
 .about-badge {
-  position: absolute; bottom: -22px; right: 30px; background: var(--red); color: #fff;
+  position: absolute; top: -20px; left: 22px; background: var(--red); color: #fff;
   padding: 16px 22px; border-radius: 18px; box-shadow: 0 16px 34px rgba(207,23,37,.35); text-align: center;
 }
 .about-badge b { display: block; font-size: 28px; font-weight: 900; line-height: 1.2; }
@@ -387,9 +388,11 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .bm-next { left: -8px; }
 .bc { flex: none; width: 340px; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s; }
 .bc:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.bc-img { position: relative; aspect-ratio: 16 / 9.5; overflow: hidden; background: var(--bg-2); }
-.bc-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.7,.2,1); }
-.bc:hover .bc-img img { transform: scale(1.05); }
+/* بنر کامل دیده می‌شود (contain)؛ فضای خالی کادر با نسخه‌ی محو همان بنر پر می‌شود */
+.bc-img { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--bg-2); }
+.bc-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+.bc-img .bc-bg { object-fit: cover; filter: blur(16px) saturate(1.15); transform: scale(1.15); opacity: .8; }
+.bc:hover .bc-img img:not(.bc-bg) { transform: scale(1.03); }
 .bc figcaption { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; min-height: 72px; }
 .bc figcaption b { display: block; font-size: 16px; font-weight: 900; }
 .bc-co { display: flex; align-items: baseline; line-height: 1.6; gap: 6px; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--red); }
@@ -563,7 +566,12 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
   .footer-grid { grid-template-columns: 1fr; }
   .float-card { font-size: 12px; padding: 10px 12px; }
   .float-card b { font-size: 15px; }
-  .about-badge { right: 12px; }
-  .hero-visual .media { aspect-ratio: 4 / 3.4; }
+  .about-badge { left: 10px; top: -14px; padding: 10px 14px; }
+  .about-badge b { font-size: 22px; }
+  /* هیرو موبایل: کارت‌های شناور زیر عکس، نه روی کامیون‌ها */
+  .hero-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hero-visual .media { grid-column: span 2; }
+  .hero-visual .float-card { position: static; animation: none; justify-content: center; }
+  .hero-visual .media { min-height: 0; aspect-ratio: 16 / 9; }
   .hero h1 { margin-top: 16px; }
 }
