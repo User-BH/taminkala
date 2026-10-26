@@ -123,7 +123,7 @@ sudo taminkala doctor
 | فایل | محل نمایش |
 |---|---|
 | `public/assets/img/photos/fleet.jpg` | عکس اصلی بالای صفحه |
-| `public/assets/img/photos/office.jpg`، `warehouse.jpg` | بخش درباره ما (ساختمان اداری و محوطه) |
+| `public/assets/img/photos/office.jpg`، `building.jpg`، `warehouse.jpg` | بخش درباره ما (ساختمان اداری، ساختمان تابلودار، محوطه) |
 | `public/assets/img/photos/warehouse-pano.jpg` (+ `-1200`) | بنر تمام‌عرض «زیرساخت» با حرکت آرام هنگام اسکرول |
 | `public/assets/img/brands/doghazal.jpg`، `sofia.jpg`، `homecare.jpg` | کارت برندهای همکار (عمودی یا افقی؛ برای عمودی کلاس `portrait`) |
 

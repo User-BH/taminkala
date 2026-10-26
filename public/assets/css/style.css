@@ -243,9 +243,10 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 
 /* ---------- درباره ما ---------- */
 .about-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 60px; align-items: center; }
-.about-media { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-.about-media .media { aspect-ratio: 3 / 4.2; }
-.about-media .media + .media { margin-top: 56px; }
+/* سه عکس: ساختمان اداری (بزرگ) + ساختمان تابلودار و محوطه انبارها */
+.about-media { position: relative; display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+.about-media .media:first-child { grid-row: span 2; aspect-ratio: auto; min-height: 100%; }
+.about-media .media:not(:first-child) { aspect-ratio: 1 / .92; }
 .about-badge {
   position: absolute; bottom: -22px; right: 30px; background: var(--red); color: #fff;
   padding: 16px 22px; border-radius: 18px; box-shadow: 0 16px 34px rgba(207,23,37,.35); text-align: center;
@@ -558,7 +559,6 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
   .bento-big p { max-width: none; }
   .route-art { width: 44%; left: 14px; top: 16px; opacity: .4; }
   .contact-panel { padding: 26px 20px; }
-  .about-media .media + .media { margin-top: 32px; }
   .checks { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .float-card { font-size: 12px; padding: 10px 12px; }
