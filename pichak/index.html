@@ -4,11 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>سامانه استعلام چک | تامین کالا باختر</title>
+    <!-- برنامه‌ی نصبی (افزودن به صفحه‌ی گوشی) -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8E0000">
+    <meta name="application-name" content="استعلام چک تامین کالا">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="استعلام چک">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <link rel="icon" href="/static/icon-192.png" sizes="192x192">
     <link href="/static/fallback.css" rel="stylesheet">
     <link href="/static/vendor/bootstrap.rtl.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css'">
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <script src="/static/vendor/html5-qrcode.min.js?v=4" type="text/javascript"></script>
     <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('/assets/fonts/Vazirmatn-wght.woff2') format('woff2'),
+                 url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn%5Bwght%5D.woff2') format('woff2');
+            font-weight: 100 900; font-display: swap;
+        }
+        /* پنجره‌ی نصب برنامه */
+        .install-sheet { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: flex-end; justify-content: center;
+            background: rgba(14, 10, 12, .55); backdrop-filter: blur(3px); animation: ins-fade .25s; }
+        .install-sheet[hidden] { display: none; }
+        .install-card { width: 100%; max-width: 480px; background: #fff; border-radius: 22px 22px 0 0; padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+            box-shadow: 0 -10px 40px rgba(0,0,0,.25); animation: ins-up .35s cubic-bezier(.2,.7,.2,1); }
+        @media (min-width: 560px) { .install-sheet { align-items: center; } .install-card { border-radius: 22px; } }
+        @keyframes ins-up { from { transform: translateY(40px); opacity: 0; } }
+        @keyframes ins-fade { from { opacity: 0; } }
+        .install-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .install-head img { width: 60px; height: 60px; border-radius: 16px; box-shadow: 0 6px 16px rgba(198, 40, 40, .35); }
+        .install-head b { display: block; font-size: 1.05rem; }
+        .install-head small { color: #6c757d; }
+        .install-card p { color: #495057; font-size: .9rem; line-height: 1.9; margin-bottom: 14px; }
+        .install-steps { background: #f6f7f9; border: 1px solid #e6e8ec; border-radius: 14px; padding: 12px 14px; font-size: .86rem; line-height: 2; margin-bottom: 14px; }
+        .install-steps[hidden] { display: none; }
+        .install-steps .k { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 8px;
+            background: #fff; border: 1px solid #dee2e6; font-weight: 800; vertical-align: middle; }
+        .install-actions { display: flex; gap: 10px; }
+        .install-actions .btn { flex: 1; border-radius: 12px; padding: 10px; font-weight: 700; }
+        .btn-install { background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark)); color: #fff; border: 0; }
+        .btn-install:hover { color: #fff; filter: brightness(1.08); }
+        .install-chip { position: absolute; top: 12px; left: 12px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff;
+            font-size: .75rem; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
+        .install-chip[hidden] { display: none; }
         :root {
             --brand-red: #C62828;
             --brand-red-dark: #8E0000;
@@ -288,6 +328,7 @@
 <div class="app-container">
     <!-- هدر برند تامین کالا باختر -->
     <div class="brand-header d-flex align-items-center gap-3">
+        <button type="button" class="install-chip" id="installChip" hidden>📲 نصب روی گوشی</button>
         <div class="logo-wrapper">
             <img src="/logo.png" alt="تامین کالا باختر" onerror="this.style.display='none'">
         </div>
@@ -710,6 +751,81 @@
     }
 
     window.onload = loadCaptcha;
+</script>
+
+<!-- پنجره‌ی «افزودن به صفحه‌ی گوشی» -->
+<div class="install-sheet" id="installSheet" role="dialog" aria-modal="true" aria-labelledby="installTitle" hidden>
+    <div class="install-card">
+        <div class="install-head">
+            <img src="/static/icon-192.png" alt="" width="60" height="60">
+            <div><b id="installTitle">استعلام چک تامین کالا</b><small>نصب روی صفحه‌ی اصلی گوشی</small></div>
+        </div>
+        <p>این سامانه را به صفحه‌ی گوشی اضافه کنید تا مثل یک برنامه، با یک لمس مستقیم صفحه‌ی استعلام چک باز شود.</p>
+        <div class="install-steps" id="stepsIos" hidden>
+            ۱. در سافاری، دکمه‌ی اشتراک‌گذاری <span class="k">⬆︎</span> پایین صفحه را بزنید.<br>
+            ۲. گزینه‌ی <b>Add to Home Screen</b> (افزودن به صفحه اصلی) را انتخاب کنید.<br>
+            ۳. روی <b>Add</b> بزنید.
+        </div>
+        <div class="install-steps" id="stepsOther" hidden>
+            ۱. منوی مرورگر <span class="k">⋮</span> (بالای صفحه در کروم) را باز کنید.<br>
+            ۲. گزینه‌ی <b>افزودن به صفحه اصلی</b> یا <b>Install app</b> را بزنید.<br>
+            ۳. نصب یا افزودن را تأیید کنید.
+        </div>
+        <div class="install-actions">
+            <button type="button" class="btn btn-install" id="installBtn" hidden>نصب برنامه</button>
+            <button type="button" class="btn btn-light border" id="installLater">بعداً</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    // سرویس‌ورکر (فقط روی HTTPS یا localhost کار می‌کند)
+    if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch(function () {});
+
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    if (standalone) return;   // از قبل نصب شده
+
+    var sheet = document.getElementById('installSheet'), chip = document.getElementById('installChip'),
+        btn = document.getElementById('installBtn'), later = document.getElementById('installLater');
+    var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+    var mobile = ios || /android|mobile/i.test(ua), deferred = null;
+    var KEY = 'pichak-install-later';
+    var snoozed = function () { try { return Date.now() - (+localStorage.getItem(KEY) || 0) < 7 * 864e5; } catch (e) { return false; } };
+
+    var open = function () {
+        document.getElementById('stepsIos').hidden = !(ios && !deferred);
+        document.getElementById('stepsOther').hidden = !!(ios || deferred);
+        btn.hidden = !deferred;
+        sheet.hidden = false;
+        (deferred ? btn : later).focus();
+    };
+    var close = function () {
+        sheet.hidden = true;
+        try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+    };
+    later.addEventListener('click', close);
+    sheet.addEventListener('click', function (e) { if (e.target === sheet) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) close(); });
+    chip.addEventListener('click', open);
+
+    // اندروید/کروم روی HTTPS: دکمه‌ی نصب واقعی
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault(); deferred = e; chip.hidden = false;
+        if (!sheet.hidden) open();
+    });
+    btn.addEventListener('click', function () {
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.finally(function () { deferred = null; sheet.hidden = true; chip.hidden = true; });
+    });
+    window.addEventListener('appinstalled', function () { sheet.hidden = true; chip.hidden = true; });
+
+    // فقط روی گوشی، چند ثانیه بعد از باز شدن، و اگر کاربر در ۷ روز گذشته «بعداً» نزده باشد
+    if (mobile) {
+        chip.hidden = false;
+        if (!snoozed()) setTimeout(function () { if (sheet.hidden) open(); }, 2500);
+    }
+})();
 </script>
 </body>
 </html>

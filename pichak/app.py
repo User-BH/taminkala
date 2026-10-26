@@ -406,6 +406,19 @@ def home():
     return send_from_directory(HERE, "index.html", mimetype="text/html")
 
 
+@app.get("/manifest.webmanifest")
+def manifest():
+    return send_from_directory(HERE / "static", "manifest.webmanifest", mimetype="application/manifest+json", max_age=0)
+
+
+@app.get("/sw.js")
+def service_worker():
+    # از ریشه سرو می‌شود تا کل برنامه را پوشش دهد؛ کش نشود تا به‌روزرسانی‌ها فوراً برسد
+    response = send_from_directory(HERE / "static", "sw.js", mimetype="application/javascript", max_age=0)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.get("/logo.png")
 def logo():
     if not (HERE / "logo.png").is_file():
