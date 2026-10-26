@@ -118,6 +118,25 @@
     });
   }
 
+  /* ---------- پانورامای انبار: با اسکرول خیلی آرام از راست به چپ حرکت می‌کند ---------- */
+  var pano = document.querySelector('.infra-media'), panoImg = pano && pano.querySelector('img');
+  if (panoImg && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    var panoQueued = false;
+    var panoMove = function () {
+      panoQueued = false;
+      var r = pano.getBoundingClientRect(), vh = window.innerHeight;
+      if (r.bottom < 0 || r.top > vh) return;
+      var prog = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));   // ۰ وقتی وارد می‌شود، ۱ وقتی خارج می‌شود
+      var room = panoImg.offsetWidth - pano.offsetWidth;
+      panoImg.style.transform = 'translate3d(' + (-prog * room).toFixed(1) + 'px,0,0)';
+    };
+    var panoQueue = function () { if (!panoQueued) { panoQueued = true; requestAnimationFrame(panoMove); } };
+    window.addEventListener('scroll', panoQueue, { passive: true });
+    window.addEventListener('resize', panoQueue);
+    panoImg.addEventListener('load', panoQueue);
+    panoQueue();
+  }
+
   /* ---------- برندها: ردیف خودکار حرکت می‌کند و دستی هم ورق می‌خورد ----------
      کارت‌ها دو بار تکرار می‌شوند؛ وقتی موقعیت از طول یک دور گذشت، بی‌صدا به ابتدا برمی‌گردد. */
   var mq = document.querySelector('.brand-marquee'), track = mq && mq.querySelector('.brand-track');
