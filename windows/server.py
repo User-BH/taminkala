@@ -160,13 +160,15 @@ def static_app(root: Path, extra_roots: dict[str, Path] | None = None, extra_fil
         ctype = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
         if ctype.startswith("text/") or ctype in ("application/javascript", "application/json", "image/svg+xml"):
             ctype += "; charset=utf-8"
-        if file.suffix == ".html" or file.name in ("robots.txt", "sitemap.xml", "manifest.webmanifest"):
-            cache = "no-cache"
-        elif file.suffix == ".woff2":   # the font never changes in place
-            cache = "public, max-age=31536000, immutable"
-        else:
-            cache = "public, max-age=604800"
-        headers = [("Content-Type", ctype), ("Cache-Control", cache), ("X-Content-Type-Options", "nosniff"), ("Vary", "Accept-Encoding")]
+        # فونت هرگز عوض نمی‌شود؛ بقیه (CSS/JS/عکس‌ها با همان نام) با هر به‌روزرسانی ممکن است عوض شوند:
+        # مرورگر نگه می‌دارد ولی هر بار با ETag می‌پرسد و اگر تغییری نبود فقط پاسخ کوتاه 304 می‌گیرد
+        st = file.stat()
+        etag = f'"{st.st_mtime_ns:x}-{st.st_size:x}"'
+        cache = "public, max-age=31536000, immutable" if file.suffix == ".woff2" else "no-cache"
+        headers = [("Content-Type", ctype), ("Cache-Control", cache), ("ETag", etag), ("X-Content-Type-Options", "nosniff"), ("Vary", "Accept-Encoding")]
+        if environ.get("HTTP_IF_NONE_MATCH") == etag:
+            start_response("304 Not Modified", headers[1:])
+            return []
         if ctype.startswith(COMPRESSIBLE) and "gzip" in environ.get("HTTP_ACCEPT_ENCODING", ""):
             body = _gzipped(file)
             start_response("200 OK", headers + [("Content-Encoding", "gzip"), ("Content-Length", str(len(body)))])

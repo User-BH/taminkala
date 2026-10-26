@@ -771,6 +771,10 @@
             ۲. گزینه‌ی <b>افزودن به صفحه اصلی</b> یا <b>Install app</b> را بزنید.<br>
             ۳. نصب یا افزودن را تأیید کنید.
         </div>
+        <div class="install-steps" id="stepsHttps" hidden>
+            نصب کامل برنامه (دکمه‌ی «نصب» کروم) فقط روی نشانی امن <b dir="ltr">https</b> ممکن است؛ این صفحه با نشانی ناامن باز شده و کروم فقط میانبر می‌سازد.
+            <a class="btn btn-install w-100 mt-2" id="httpsLink" href="#">باز کردن نشانی امن و نصب</a>
+        </div>
         <div class="install-actions">
             <button type="button" class="btn btn-install" id="installBtn" hidden>نصب برنامه</button>
             <button type="button" class="btn btn-light border" id="installLater">بعداً</button>
@@ -792,9 +796,15 @@
     var KEY = 'pichak-install-later';
     var snoozed = function () { try { return Date.now() - (+localStorage.getItem(KEY) || 0) < 7 * 864e5; } catch (e) { return false; } };
 
+    // نشانی امن استعلام چک (زیردامنه‌ی پشت ابرآروان)؛ روی http کروم برنامه را نصب نمی‌کند
+    var SECURE_URL = 'https://check.tamintabriz.ir/';
+    var insecure = !window.isSecureContext && location.origin + '/' !== SECURE_URL;
+    document.getElementById('httpsLink').href = SECURE_URL;
     var open = function () {
+        var android = !ios && insecure;
+        document.getElementById('stepsHttps').hidden = !android;
         document.getElementById('stepsIos').hidden = !(ios && !deferred);
-        document.getElementById('stepsOther').hidden = !!(ios || deferred);
+        document.getElementById('stepsOther').hidden = !!(ios || deferred || android);
         btn.hidden = !deferred;
         sheet.hidden = false;
         (deferred ? btn : later).focus();
