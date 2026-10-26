@@ -118,19 +118,78 @@
     });
   }
 
-  /* ---------- برندها: کارت‌ها یک‌بار تکرار می‌شوند تا ردیف بی‌وقفه حرکت کند ---------- */
-  var track = document.querySelector('.brand-track');
-  if (track && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-    var cards = Array.prototype.slice.call(track.children);
-    cards.forEach(function (card) {
+  /* ---------- برندها: ردیف خودکار حرکت می‌کند و دستی هم ورق می‌خورد ----------
+     کارت‌ها دو بار تکرار می‌شوند؛ وقتی موقعیت از طول یک دور گذشت، بی‌صدا به ابتدا برمی‌گردد. */
+  var mq = document.querySelector('.brand-marquee'), track = mq && mq.querySelector('.brand-track');
+  if (track) {
+    var originals = Array.prototype.slice.call(track.children);
+    for (var k = 0; k < 2; k++) originals.forEach(function (card) {
       var copy = card.cloneNode(true);
       copy.setAttribute('aria-hidden', 'true');
       copy.querySelectorAll('img').forEach(function (img) { img.alt = ''; });
       track.appendChild(copy);
     });
-    track.style.setProperty('--dur', cards.length * 8 + 's');
-    track.classList.add('moving');
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var SPEED = 36, pos = 0, last = 0, hover = false, holdUntil = 0, drag = null;
+    var loop = function () { return track.children[originals.length].offsetLeft - track.children[0].offsetLeft; };
+    var step = function () { return track.children[0].offsetWidth + parseFloat(getComputedStyle(track).columnGap || 22); };
+    var hold = function (ms) { holdUntil = performance.now() + (ms || 2500); };
+    var wrap = function () {
+      var L = loop(), x = mq.scrollLeft;
+      if (x >= L) mq.scrollLeft = x - L; else if (x <= 0) mq.scrollLeft = x + L;
+    };
+    mq.scrollLeft = loop();   // از وسط شروع می‌شود تا دو طرف جا برای ورق زدن باشد
+    pos = mq.scrollLeft;
+    (function tick(t) {
+      var dt = last ? Math.min(t - last, 64) / 1000 : 0; last = t;
+      if (!still && !hover && !drag && t > holdUntil) {
+        pos += SPEED * dt;
+        var L = loop();
+        if (pos >= 2 * L) pos -= L;
+        mq.scrollLeft = pos;
+      } else {
+        if (!drag && t > holdUntil - 2000) wrap();
+        pos = mq.scrollLeft;
+      }
+      requestAnimationFrame(tick);
+    })(0);
+    mq.addEventListener('mouseenter', function () { hover = true; });
+    mq.addEventListener('mouseleave', function () { hover = false; });
+    mq.addEventListener('touchstart', function () { hold(4000); }, { passive: true });
+    mq.addEventListener('touchmove', function () { hold(4000); }, { passive: true });
+    mq.addEventListener('wheel', function () { hold(3000); }, { passive: true });
+    mq.addEventListener('focusin', function () { hold(6000); });
+    mq.addEventListener('pointerdown', function (e) {   // کشیدن با ماوس
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { x: e.clientX, left: mq.scrollLeft };
+      mq.classList.add('dragging');
+    });
+    window.addEventListener('pointermove', function (e) { if (drag) mq.scrollLeft = drag.left - (e.clientX - drag.x); });
+    window.addEventListener('pointerup', function () { if (drag) { drag = null; mq.classList.remove('dragging'); hold(2500); } });
+    mq.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(e.key === 'ArrowRight' ? -1 : 1); }
+    });
+    function go(dir) {   // dir=1: برند بعدی (به چپ)، dir=-1: برند قبلی
+      wrap(); hold(3500);
+      mq.scrollBy({ left: dir * step(), behavior: still ? 'auto' : 'smooth' });
+    }
+    var prev = document.querySelector('.bm-prev'), next = document.querySelector('.bm-next');
+    if (prev) prev.addEventListener('click', function () { go(-1); });
+    if (next) next.addEventListener('click', function () { go(1); });
   }
+
+  /* ---------- وضعیت باز/بسته بودن شرکت (به وقت تهران: شنبه تا پنجشنبه ۷ تا ۱۷) ---------- */
+  var openEl = document.getElementById('openState');
+  if (openEl) try {
+    var parts = {};
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tehran', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' })
+      .formatToParts(new Date()).forEach(function (x) { parts[x.type] = x.value; });
+    var mins = (+parts.hour % 24) * 60 + +parts.minute;
+    var isOpen = parts.weekday !== 'Fri' && mins >= 7 * 60 && mins < 17 * 60;
+    openEl.textContent = isOpen ? 'الان باز است' : 'الان بسته است';
+    openEl.classList.toggle('is-open', isOpen);
+    openEl.hidden = false;
+  } catch (e) {}
 
   /* ---------- سامانه‌های کارکنان: نشانی = همین سرور + پورت هر سامانه ---------- */
   var PORTS = { pichak: 8081, bime: 8082 }, HOSTS = {};
@@ -144,17 +203,18 @@
     document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = portalAddr(s.getAttribute('data-addr')); });
   }
   paintPortal();
+  // سامانه‌ی بیمه و حواله فقط وقتی سایت با IP خصوصی (داخل شرکت) باز شده نشان داده می‌شود؛
+  // با IP عمومی یا دامنه کارت آن پنهان است (پورت آن هم از بیرون بسته است)
+  if (!privateHost) document.querySelectorAll('[data-internal]').forEach(function (el) {
+    el.hidden = true; el.parentNode.classList.add('solo');
+  });
   if (window.fetch) fetch('/ports.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
     .then(function (p) {
       if (!p) return;
       ['pichak', 'bime'].forEach(function (k) { if (+p[k]) PORTS[k] = +p[k]; });
       if (p.pichak_host) HOSTS.pichak = p.pichak_host;
       paintPortal();
-      // سامانه‌های داخلی (بیمه و حواله) بیرون از شبکه شرکت اصلاً نشان داده نمی‌شوند؛
-      // سایتی که با IP خصوصی (داخل شرکت) باز شده همیشه آن را نشان می‌دهد
-      if (p.internal === false && !privateHost) document.querySelectorAll('[data-internal]').forEach(function (el) {
-        el.hidden = true; el.parentNode.classList.add('solo');
-      });
+
     }).catch(function () {});
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {

@@ -67,6 +67,20 @@ def client_allowed(environ, nets) -> bool:
     return any(ip in n for n in nets)
 
 
+def internal_host(environ) -> bool:
+    """Was the page requested by an internal name (private IP, localhost, a computer name)?
+    Second line of defence for bime: if the router rewrites outside visitors to its own LAN address
+    (masquerade on forwarded traffic), REMOTE_ADDR alone would look internal; a public IP or a domain
+    in the Host header still gives it away."""
+    host = (environ.get("HTTP_HOST") or environ.get("SERVER_NAME") or "").strip().lower()
+    host = host[1:host.index("]")] if host.startswith("[") and "]" in host else host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback
+    except ValueError:
+        return "." not in host or host.endswith((".local", ".lan", ".internal"))
+
+
 def setup_logging() -> logging.Logger:
     LOG_DIR.mkdir(exist_ok=True)
     handler = logging.handlers.RotatingFileHandler(LOG_DIR / "server.log", maxBytes=2_000_000, backupCount=3, encoding="utf-8")
@@ -198,10 +212,10 @@ def build(cfg, log):
     site_assets = static_app(SITE_DIR)
 
     def bime_app(environ, start_response):
-        if not client_allowed(environ, cfg["_bime_nets"]):
+        if not (client_allowed(environ, cfg["_bime_nets"]) and internal_host(environ)):
             if environ.get("PATH_INFO", "").startswith("/assets/"):   # فقط فایل‌های ظاهری صفحه پیام
                 return site_assets(environ, start_response)
-            log.warning("bime blocked for %s", environ.get("REMOTE_ADDR"))
+            log.warning("bime blocked for %s (host %s)", environ.get("REMOTE_ADDR"), environ.get("HTTP_HOST"))
             return _internal_only(start_response)
         return bime(environ, start_response)
 
