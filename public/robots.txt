@@ -3,4 +3,4 @@ Allow: /
 Disallow: /404.html
 Disallow: /internal-only.html
 
-Sitemap: https://tamintabriz.ir/sitemap.xml
+Sitemap: https://tkbp.ir/sitemap.xml

@@ -797,7 +797,7 @@
     var snoozed = function () { try { return Date.now() - (+localStorage.getItem(KEY) || 0) < 7 * 864e5; } catch (e) { return false; } };
 
     // نشانی امن استعلام چک (زیردامنه‌ی پشت ابرآروان)؛ روی http کروم برنامه را نصب نمی‌کند
-    var SECURE_URL = 'https://check.tamintabriz.ir/';
+    var SECURE_URL = 'https://check.tkbp.ir/';
     var insecure = !window.isSecureContext && location.origin + '/' !== SECURE_URL;
     document.getElementById('httpsLink').href = SECURE_URL;
     var open = function () {
