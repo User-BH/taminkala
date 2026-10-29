@@ -103,6 +103,8 @@
     <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="m10 13 4-4"/></symbol>
     <symbol id="i-cheque" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M6 10h7M6 14h4M15.5 13.5l1.5 1.5 3-3.5"/></symbol>
     <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h3M14 14h3M7 17.5h3"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
     <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.5-4A8 8 0 1 1 8 18.5z"/><path d="M9 10h6M9 13h4"/></symbol>
   </defs>
@@ -196,16 +198,50 @@
           <button type="button" class="portal-addr" data-copy="pichak" title="کپی نشانی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="pichak">—</span></button>
         </div>
       </article>
-      <article class="portal-card reveal" data-internal>
-        <div class="portal-icon"><svg class="i"><use href="#i-doc"/></svg></div>
-        <span class="portal-who">ویژه واحد مالی و منابع انسانی</span>
-        <h3>سامانه‌ی بیمه و حواله</h3>
-        <p>ساخت لیست و فایل کارگاه بیمه‌ی تأمین اجتماعی و فایل حواله‌ی حقوق نرم‌افزار کارآمد؛ همه‌ی پردازش در همان مرورگر انجام می‌شود.</p>
-        <div class="portal-actions">
-          <a class="btn btn-outline" data-portal="bime" href="#portal">ورود به سامانه <svg class="i"><use href="#i-arrow"/></svg></a>
-          <button type="button" class="portal-addr" data-copy="bime" title="کپی نشانی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime">—</span></button>
+      <div class="portal-internal reveal" data-internal>
+        <div class="pi-head">
+          <span class="pi-lock"><svg class="i"><use href="#i-lock"/></svg></span>
+          <div><h3>سامانه‌های داخلی</h3><p>فقط از رایانه‌های شبکه‌ی شرکت باز می‌شوند</p></div>
         </div>
-      </article>
+        <div class="pi-grid">
+          <div class="pi-card">
+            <span class="pi-icon"><svg class="i"><use href="#i-doc"/></svg></span>
+            <div class="pi-body">
+              <small>واحد مالی و منابع انسانی</small>
+              <h4><a data-portal="bime" data-path="/" href="#portal">بیمه و حواله</a></h4>
+              <p>لیست و فایل کارگاه تأمین اجتماعی و حواله‌ی حقوق کارآمد</p>
+            </div>
+            <button type="button" class="pi-copy" data-copy="bime" data-path="/" title="کپی نشانی بیمه و حواله" aria-label="کپی نشانی بیمه و حواله"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime" data-path="/" hidden>—</span></button>
+          </div>
+          <div class="pi-card">
+            <span class="pi-icon"><svg class="i"><use href="#i-calendar"/></svg></span>
+            <div class="pi-body">
+              <small>واحد مالی</small>
+              <h4><a data-portal="bime" data-path="/ras-chek/" href="#portal">رأس‌گیری چک‌ها</a></h4>
+              <p>تاریخ رأس چند چک با میانگین وزنی و تقویم شمسی</p>
+            </div>
+            <button type="button" class="pi-copy" data-copy="bime" data-path="/ras-chek/" title="کپی نشانی رأس‌گیری چک‌ها" aria-label="کپی نشانی رأس‌گیری چک‌ها"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime" data-path="/ras-chek/" hidden>—</span></button>
+          </div>
+          <div class="pi-card">
+            <span class="pi-icon"><svg class="i"><use href="#i-chart"/></svg></span>
+            <div class="pi-body">
+              <small>واحد فروش</small>
+              <h4><a data-portal="bime" data-path="/tohfe/" href="#portal">گزارش فروش تحفه</a></h4>
+              <p>جدول فروشندگان و شرینگ محصولات تحفه از اکسل فروش</p>
+            </div>
+            <button type="button" class="pi-copy" data-copy="bime" data-path="/tohfe/" title="کپی نشانی گزارش فروش تحفه" aria-label="کپی نشانی گزارش فروش تحفه"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime" data-path="/tohfe/" hidden>—</span></button>
+          </div>
+          <div class="pi-card">
+            <span class="pi-icon"><svg class="i"><use href="#i-box"/></svg></span>
+            <div class="pi-body">
+              <small>انبار و بازرگانی</small>
+              <h4><a data-portal="bime" data-path="/inventory/" href="#portal">کنترل موجودی</a></h4>
+              <p>مغایرت سامانه‌ی جامع تجارت، کاردکس و انبار؛ چک فاکتورها</p>
+            </div>
+            <button type="button" class="pi-copy" data-copy="bime" data-path="/inventory/" title="کپی نشانی کنترل موجودی" aria-label="کپی نشانی کنترل موجودی"><svg class="i"><use href="#i-copy"/></svg><span data-addr="bime" data-path="/inventory/" hidden>—</span></button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -614,7 +650,7 @@
     </div>
     <div class="footer-bottom">
       <span>© <span id="year">۱۴۰۵</span> — تمامی حقوق برای شرکت تأمین کالا باختر محفوظ است.</span>
-      <span class="credit">طراحی و توسعه: <b>شرکت رهوار پیوند داده</b></span>
+      <span class="credit">طراحی و توسعه: <a href="https://rahvarpeyvand.ir" target="_blank" rel="noopener" class="rahvar"><b>شرکت رهوار پیوند داده</b></a></span>
     </div>
   </div>
 </footer>

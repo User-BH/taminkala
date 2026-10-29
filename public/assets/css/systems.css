@@ -1,0 +1,71 @@
+/* پوسته‌ی مشترک سامانه‌های داخلی (رأس‌گیری چک، گزارش فروش تحفه، کنترل موجودی)
+   هم‌خوان با سایت اصلی و استعلام چک: هدر تیره-زرشکی، قرمز سازمانی، پس‌زمینه‌ی گرم.
+   فقط نمایش صفحه را عوض می‌کند؛ چاپ همان قالب خود سامانه است.
+   طراحی و توسعه: شرکت رهوار پیوند داده */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/assets/fonts/Vazirmatn-wght.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
+}
+
+@media screen {
+  :root { --tk-red: #cf1725; --tk-red-dark: #a3121d; --tk-soft: #fff1ef; --tk-bg: #f7f3ef; --tk-line: #ebe2db;
+          --tk-head: linear-gradient(115deg, #18191d 0%, #340f15 55%, #8f1020 100%); }
+  html, body, :root { background: var(--tk-bg); }
+
+  /* ---------- هدر یکسان ---------- */
+  .topbar, .site-header, .sys-bar {
+    position: relative; overflow: hidden; color: #fff; border: 0 !important;
+    background: var(--tk-head) !important; box-shadow: 0 10px 30px rgba(52, 15, 21, .25);
+  }
+  .topbar::before, .site-header::before, .sys-bar::before {
+    content: ""; position: absolute; left: -120px; top: -150px; width: 380px; height: 380px; border-radius: 50%; pointer-events: none;
+    border: 1px solid #ffffff14; box-shadow: 0 0 0 60px #ffffff06, 0 0 0 120px #ffffff04;
+  }
+  .site-header::after { display: none; }
+  .topbar-inner, .header-inner, .sys-bar-in { position: relative; z-index: 1; }
+  .brand-logo, .sys-brand img { background: #fff; border-radius: 50%; box-shadow: 0 6px 20px rgba(207, 23, 37, .45) !important; }
+  .topbar .brand span, .site-header .brand .eyebrow, .sys-brand span { color: #ffb3ac !important; }
+  .offline-pill, .header-tag { background: #ffffff10 !important; border-color: #ffffff24 !important; color: #f1e3e1 !important; }
+
+  .sys-bar-in { max-width: 1480px; margin: auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .sys-brand { display: flex; align-items: center; gap: 14px; }
+  .sys-brand img { width: 58px; height: 58px; object-fit: contain; }
+  .sys-brand span { display: block; font-size: 12px; font-weight: 700; }
+  .sys-brand h1 { margin: 4px 0 0; font-size: 23px; line-height: 1.3; color: #fff; }
+  .sys-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* دکمه‌ی بازگشت به فهرست سامانه‌ها (روی سایت شرکت) */
+  .sys-back {
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; text-decoration: none;
+    font-size: 12.5px; font-weight: 800; color: #fff; padding: 9px 15px; border-radius: 99px;
+    background: #ffffff14; border: 1px solid #ffffff2e; transition: background .2s, border-color .2s;
+  }
+  .sys-back:hover { background: var(--tk-red); border-color: var(--tk-red); }
+  .sys-back svg { width: 16px; height: 16px; }
+
+  /* ---------- رنگ‌های اصلی ---------- */
+  .primary-button { background: var(--tk-red) !important; box-shadow: 0 8px 18px rgba(207, 23, 37, .28) !important; }
+  .primary-button:hover:not(:disabled) { background: var(--tk-red-dark) !important; }
+  .eyebrow, .section-kicker, .report-company { color: var(--tk-red) !important; }
+  .kicker-line { background: var(--tk-red) !important; }
+  .result-hero { background: radial-gradient(circle at 0% 0%, rgba(207, 23, 37, .35), transparent 55%), linear-gradient(150deg, #1d1b20, #3a0f17) !important; }
+  .origin-card, .checks-card, .result-details, .control-card, .stat-card, .metric-card { border-color: var(--tk-line) !important; border-radius: 18px !important; }
+
+  /* کنترل موجودی: متغیرهای رنگ خودش */
+  :root:not([data-theme="dark"]) body.sys-inventory { --accent: #cf1725; --accent-ink: #fff; --accent-soft: #fdecea; --bg: #f7f3ef; --line: #e7ddd6; --sunk: #f1ebe5; }
+  body.sys-inventory .wrap > .head h1 { display: none; }
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.sys-inventory { --accent: #ff6b76; --accent-soft: #3a1a1c; }
+}
+
+@media (max-width: 640px) {
+  .sys-bar-in { padding: 14px 14px; }
+  .sys-brand img { width: 46px; height: 46px; }
+  .sys-brand h1 { font-size: 18px; }
+  .sys-back span { display: none; }   /* فقط آیکون */
+  .sys-back { padding: 9px; }
+}
+@media print { .sys-back { display: none !important; } .sys-bar { background: #fff !important; color: #000 !important; box-shadow: none !important; }
+  .sys-bar::before { display: none; } .sys-brand h1 { color: #000 !important; } .sys-brand span { color: #444 !important; } }

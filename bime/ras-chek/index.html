@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e2b35">
+  <meta name="description" content="محاسبه آفلاین و دقیق رأس چک با تاریخ شمسی و میانگین وزنی مبالغ">
+  <title>محاسبه رأس چک | شرکت تأمین کالا باختر</title>
+  <link rel="icon" type="image/png" href="/assets/img/favicon-32.png">
+  <style>
+
+:root{font-family:"Vazirmatn",Tahoma,"Segoe UI",Arial,sans-serif;color:#26343c;background:#f6f5f1;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;min-height:100vh}input,button{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.48}
+.topbar{background:#1c2b35;color:#fff;border-bottom:3px solid #a7363b}.topbar-inner{max-width:1480px;margin:auto;padding:21px 35px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:14px}.brand-logo{width:62px;height:62px;object-fit:contain;border-radius:50%;background:#fff;box-shadow:0 5px 17px #0005}.brand span{font-size:12px;color:#dfb5b6;font-weight:700}.brand h1{font-size:24px;margin:5px 0 0;line-height:1.3}
+.offline-pill{font-size:11px;color:#c9dad5;border:1px solid #687c7c88;border-radius:25px;padding:10px 14px;display:flex;gap:9px;align-items:center;white-space:nowrap}.green-dot{width:8px;height:8px;background:#85ca9e;border-radius:50%;box-shadow:0 0 0 4px #85ca9e22}
+.app-shell{max-width:1480px;margin:auto;padding:30px 32px 46px;display:grid;grid-template-columns:minmax(0,1fr) 333px;gap:23px;align-items:start}
+.editor{min-width:0}.page-intro{padding:2px 3px 22px}.eyebrow{font-size:11px;font-weight:800;color:#ae343a;letter-spacing:.04em;margin-bottom:8px}.page-intro h2{font-size:27px;margin:0 0 10px}.page-intro p{font-size:12px;line-height:2;color:#7f8b92;margin:0}
+.origin-card,.checks-card{background:#fff;border:1px solid #e5e5e0;border-radius:16px;box-shadow:0 3px 22px #24313d08}
+.origin-card{display:grid;grid-template-columns:44px minmax(0,1fr) 195px;gap:14px;align-items:center;padding:17px 21px;margin-bottom:19px}
+.origin-icon{width:43px;height:43px;border-radius:12px;background:#faeded;color:#b43d43;display:grid;place-items:center}.origin-icon svg{width:23px;height:23px}
+.origin-body label{font-size:14px;font-weight:800}.required{color:#bc4246}.origin-body p{font-size:11px;color:#929da3;line-height:1.8;margin:6px 0 0}
+.origin-entry{display:flex;flex-direction:column;align-items:stretch;gap:5px}.origin-entry input{border:1px solid #d2dce0;border-radius:10px;background:#fff;padding:12px;font-size:17px;font-weight:700;letter-spacing:.06em;text-align:center;outline:0;width:100%}.origin-entry input:focus,.checks-table input:focus{border-color:#ad373e;box-shadow:0 0 0 3px #ae343a18}.origin-entry input.invalid,.checks-table input.invalid{border-color:#ba3a40;background:#fff7f7}.origin-entry small{color:#a6acb0;font-size:10px;text-align:center}
+.field-error{grid-column:2 / -1;color:#b13d42;font-size:11px;min-height:0;line-height:1.6}.field-error:empty{display:none}
+.card-header{padding:21px 23px 16px;display:flex;justify-content:space-between;align-items:center;gap:15px}.card-header h3{font-size:18px;margin:0 0 7px}.card-header p{font-size:11px;color:#8d989f;margin:0}.count-pill{border-radius:20px;background:#f6eeee;color:#9c343b;white-space:nowrap;font-size:11px;font-weight:700;padding:7px 12px}
+.table-scroller{overflow-x:auto;padding:0 16px}.checks-table{width:100%;min-width:690px;border-collapse:separate;border-spacing:0 7px;table-layout:fixed;direction:rtl}
+.checks-table th{font-size:11px;text-align:center;color:#73828a;font-weight:700;padding:8px 6px;white-space:nowrap}.checks-table th:nth-child(1){width:7%}.checks-table th:nth-child(2){width:29%}.checks-table th:nth-child(3){width:21%}.checks-table th:nth-child(4){width:13%}.checks-table th:nth-child(5){width:24%}.checks-table th:nth-child(6){width:6%}
+.checks-table tbody tr{background:#f9faf9}.checks-table tbody tr.error-row{background:#fff8f7}.checks-table td{padding:5px 5px;text-align:center;height:55px;font-size:12px;color:#45555f;vertical-align:middle}.checks-table td:first-child{border-radius:0 9px 9px 0;color:#9aa4ab;font-size:11px}.checks-table td:last-child{border-radius:9px 0 0 9px}
+.checks-table input{width:100%;min-width:0;border:1px solid #e0e6e8;border-radius:8px;background:#fff;outline:0;padding:10px 9px;font-size:13px;text-align:center;color:#26343d;transition:box-shadow .2s,border-color .2s;font-variant-numeric:tabular-nums}
+.checks-table .amount-field{text-align:right;direction:ltr;font-weight:700;letter-spacing:.02em}.checks-table .date-field{direction:ltr;letter-spacing:.06em}.checks-table td.day-value{font-weight:700;color:#506778}.checks-table td.weighted-value{font-size:11px;font-weight:700;direction:ltr;font-variant-numeric:tabular-nums}
+.delete-row{width:29px;height:29px;border:0;border-radius:8px;background:transparent;color:#aab2b5;display:grid;place-items:center;font-size:18px;padding:0;margin:auto}.delete-row:hover{background:#f6e7e8;color:#a63b40}
+.checks-table tfoot tr{background:#eaf0ee}.checks-table tfoot td{font-weight:800;border-top:1px solid #d8e2df;border-bottom:1px solid #d8e2df;padding:13px 5px}.checks-table tfoot td:first-child{border-right:1px solid #d8e2df}.checks-table tfoot td:last-child{border-left:1px solid #d8e2df}
+.row-message{display:block;color:#b63f44;font-size:10px;margin-top:4px;text-align:right;line-height:1.5}.table-actions{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:12px 23px 20px}.table-actions span:last-child{color:#9aa3a7;font-size:10px}.add-button{display:flex;align-items:center;gap:5px;border:1px solid #cad9d4;border-radius:9px;background:#f5faf8;color:#386957;font-size:12px;font-weight:800;padding:10px 14px}.add-button:hover{background:#e8f4ef}.add-button span{font-size:18px;line-height:1}
+.main-actions{display:flex;gap:10px;margin-top:19px}.primary-button,.secondary-button{border-radius:10px;padding:13px 20px;font-size:12px;font-weight:800;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:9px}.primary-button{background:#a9373d;color:#fff;box-shadow:0 6px 16px #ad30352b}.primary-button:hover:not(:disabled){background:#902a31}.primary-button svg{width:17px;height:17px}.secondary-button{background:#fff;border-color:#e2e4e0;color:#627078}.secondary-button:hover{border-color:#b6c2c0}
+.issues-box{background:#fff5ed;border:1px solid #f0cfba;color:#a25c39;border-radius:10px;padding:13px 15px;font-size:11px;line-height:2;margin-top:16px}
+.results{position:sticky;top:24px;display:flex;flex-direction:column;gap:13px}
+.result-hero{border-radius:16px;background:linear-gradient(145deg,#243746,#1b2934);color:#fff;padding:25px 23px 24px;box-shadow:0 10px 29px #23384825;position:relative;overflow:hidden}
+.result-hero:after{content:"";width:190px;height:190px;border-radius:50%;border:35px solid #ffffff06;position:absolute;left:-95px;top:-75px;pointer-events:none}
+.hero-eyebrow{display:block;color:#bdcdd7;font-size:11px;margin-bottom:16px}.result-date{display:block;font-size:31px;letter-spacing:.01em;line-height:1.5;min-height:48px;white-space:nowrap}.result-status{display:inline-block;color:#e4bdc0;background:#ffffff12;border:1px solid #ffffff16;border-radius:30px;padding:6px 11px;font-size:10px;margin-top:9px}.result-status.ready{color:#b7edcf;background:#2c66463d}.result-status.warning{color:#f0c7ab;background:#7b503b44}
+.hero-rule{height:1px;background:#ffffff27;margin:24px 0 15px}.result-caption{color:#abb9c3;font-size:10px;line-height:2}
+.result-details{background:#fff;border:1px solid #e5e5e0;border-radius:15px;overflow:hidden;box-shadow:0 3px 22px #24313d08}.detail{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid #edf0ee}.detail:last-child{border:0}.detail span{font-size:11px;color:#78858b}.detail strong{font-size:16px;color:#2b3f4a;direction:ltr;white-space:nowrap}.detail.standout{background:#f6eeed}.detail.standout strong{color:#a33a40}
+.calculation-note{border:1px solid #e4e4dc;background:#fcfbf7;border-radius:13px;padding:15px;display:flex;gap:11px;align-items:flex-start}.note-icon{font-family:Georgia,serif;border:1px solid #b59c65;color:#9f8248;border-radius:50%;font-size:15px;font-style:italic;font-weight:bold;width:22px;height:22px;flex:0 0 auto;display:grid;place-items:center}.calculation-note strong{font-size:11px}.calculation-note p{font-size:10.5px;line-height:2;color:#858c91;margin:6px 0 0}.local-note{font-size:10px;color:#a8b0b3;text-align:center;line-height:1.8;padding:0 12px}
+.footer{border-top:1px solid #e5e7e4;max-width:1416px;margin:10px auto 0;padding:17px 2px 23px;display:flex;gap:15px;justify-content:space-between;font-size:10px;color:#a3adb2}
+@media(max-width:1140px){.app-shell{grid-template-columns:minmax(0,1fr) 300px;padding:24px 19px}.topbar-inner{padding:20px}.footer{padding:17px 20px}.checks-table{min-width:660px}.origin-card{grid-template-columns:36px minmax(0,1fr) 180px;gap:10px;padding:15px}.origin-icon{width:36px;height:36px}}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr}.results{position:static;display:grid;grid-template-columns:1fr 1fr;align-items:start}.result-hero{grid-row:span 2}.local-note{grid-column:1/-1}.page-intro h2{font-size:23px}}
+@media(max-width:630px){.topbar-inner{padding:15px}.brand-logo{width:49px;height:49px}.brand h1{font-size:19px}.brand span{font-size:10px}.offline-pill{display:none}.app-shell{padding:17px 12px}.origin-card{grid-template-columns:40px 1fr;gap:10px}.origin-entry{grid-column:1/-1}.field-error{grid-column:1/-1}.card-header{padding:18px 15px;align-items:flex-start}.table-scroller{padding:0 7px}.table-actions{padding:11px;flex-wrap:wrap}.main-actions button{flex:1;padding:12px 7px}.results{display:flex}.result-hero{padding:20px}.footer{padding:14px;flex-direction:column;gap:4px}}
+@page{size:A4 portrait;margin:8mm}
+@media print{
+  body,html{background:#fff!important;color:#000!important}
+  .topbar{background:#fff!important;color:#000!important;border-bottom:1px solid #999!important}
+  .topbar-inner{padding:0 0 4mm!important}.brand-logo{width:14mm!important;height:14mm!important;box-shadow:none!important}.brand span{color:#444!important;font-size:8pt!important}.brand h1{font-size:15pt!important}.offline-pill{display:none!important}
+  .app-shell{display:block!important;padding:4mm 0 0!important;margin:0!important;max-width:none!important}.page-intro{padding:0 0 3mm!important}.page-intro h2{font-size:12pt!important}.page-intro p{font-size:7pt!important}.eyebrow{display:none!important}
+  .origin-card,.checks-card,.result-details,.result-hero{box-shadow:none!important;border-radius:0!important}
+  .origin-card{display:flex!important;padding:2mm 1mm!important;margin-bottom:3mm!important;border:1px solid #aaa!important}.origin-icon,.origin-body p,.origin-entry small,.field-error{display:none!important}.origin-body label{font-size:9pt!important}.origin-entry input{border:0!important;box-shadow:none!important;padding:0!important;font-size:10pt!important;width:38mm!important}
+  .checks-card{border:0!important}.card-header{padding:1mm 0!important}.card-header h3{font-size:10pt!important}.card-header p{display:none!important}.count-pill{font-size:8pt!important}
+  .table-scroller{overflow:visible!important;padding:0!important}.checks-table{min-width:0!important;border-collapse:collapse!important;border-spacing:0!important;font-size:8pt!important}.checks-table th{background:#eee!important;border:1px solid #777!important;font-size:7.5pt!important;padding:2mm 1mm!important}.checks-table td{background:#fff!important;border:1px solid #aaa!important;height:8mm!important;padding:1mm!important;font-size:8pt!important}.checks-table input{border:0!important;padding:0!important;font-size:8pt!important;background:transparent!important;box-shadow:none!important}.checks-table .weighted-value{font-size:7pt!important}.checks-table .delete-row,.checks-table th.action-col,.checks-table td:last-child,.checks-table tbody tr.empty-row,.table-actions,.main-actions,.issues-box{display:none!important}
+  .checks-table th:nth-child(1){width:8%}.checks-table th:nth-child(2){width:28%}.checks-table th:nth-child(3){width:23%}.checks-table th:nth-child(4){width:14%}.checks-table th:nth-child(5){width:27%}
+  .results{position:static!important;display:block!important;margin-top:4mm!important}.result-hero{background:#fff!important;color:#000!important;border:1.2px solid #555!important;padding:3mm!important;margin-bottom:2mm!important}.result-hero:after,.hero-rule,.result-caption{display:none!important}.hero-eyebrow{color:#444!important;font-size:8pt!important;margin:0 0 1mm!important}.result-date{color:#000!important;font-size:15pt!important;min-height:0!important}.result-status{color:#333!important;background:none!important;border:0!important;padding:0!important}
+  .result-details{display:grid!important;grid-template-columns:1fr 1fr;border:1px solid #aaa!important}.detail{padding:2mm!important;border:1px solid #ddd!important}.detail span{font-size:7pt!important;color:#333!important}.detail strong{font-size:9pt!important}.calculation-note,.local-note,.footer{display:none!important}
+}
+
+</style>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/assets/css/systems.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-logo" src="/assets/img/logo-192.webp" alt="لوگوی شرکت تأمین کالا باختر">
+        <div><span>شرکت تأمین کالا باختر</span><h1>راس‌گیری چک‌ها</h1></div>
+      </div>
+      <div class="sys-tools"><div class="offline-pill"><span class="green-dot"></span> محاسبه آفلاین و بدون ارسال اطلاعات</div><a class="sys-back" href="/" title="بازگشت به فهرست سامانه‌ها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>سامانه‌ها</span></a></div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="editor" aria-label="ورود اطلاعات چک‌ها">
+      <div class="page-intro">
+        <div class="eyebrow">ابزار حسابداری</div>
+        <h2>محاسبه تاریخ رأس چک</h2>
+        <p>مبلغ و تاریخ سررسید چک‌ها را وارد کنید؛ فاصله روز، میانگین وزنی و تاریخ رأس به‌صورت خودکار محاسبه می‌شوند.</p>
+      </div>
+
+      <section class="origin-card">
+        <div class="origin-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h3M14 14h3"/></svg></div>
+        <div class="origin-body"><label for="origin-date">تاریخ مبدأ رأس‌گیری <span class="required">*</span></label><p>فقط ۸ رقم بنویسید؛ اسلش‌ها خودکار اضافه می‌شوند.</p></div>
+        <div class="origin-entry"><input id="origin-date" class="date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="14050706" dir="ltr" aria-describedby="origin-error"><small>نمونه: ۱۴۰۵/۰۷/۰۶</small></div>
+        <div class="field-error" id="origin-error" role="status"></div>
+      </section>
+
+      <section class="checks-card">
+        <div class="card-header">
+          <div><div class="eyebrow">فهرست چک‌ها</div><h3>ورود مبالغ و سررسیدها</h3><p>همه مبالغ را با یک واحد ثابت (ریال یا تومان) وارد کنید.</p></div>
+          <span class="count-pill" id="row-count">۰ چک</span>
+        </div>
+        <div class="table-scroller">
+          <table class="checks-table" aria-label="جدول رأس‌گیری چک‌ها">
+            <thead><tr><th class="index-col">ردیف</th><th>مبلغ چک</th><th>تاریخ سررسید</th><th>روز از مبدأ</th><th>مبلغ × روز</th><th class="action-col">حذف</th></tr></thead>
+            <tbody id="checks-body"></tbody>
+            <tfoot><tr><td>جمع</td><td id="table-total-amount">—</td><td>—</td><td>—</td><td id="table-total-weighted">—</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <div class="table-actions"><button type="button" class="add-button" id="add-row"><span aria-hidden="true">＋</span> افزودن چک</button><span>ردیف‌های کاملاً خالی در محاسبه وارد نمی‌شوند.</span></div>
+      </section>
+
+      <div class="main-actions">
+        <button id="print-button" class="primary-button" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 15h12v6H6z"/></svg> چاپ گزارش / PDF</button>
+        <button id="clear-button" class="secondary-button" type="button">پاک‌کردن فرم</button>
+      </div>
+      <div id="issues-box" class="issues-box" role="status" aria-live="polite" hidden></div>
+    </section>
+
+    <aside class="results" aria-label="نتیجه رأس‌گیری">
+      <div class="result-hero">
+        <span class="hero-eyebrow">تاریخ نهایی رأس چک‌ها</span>
+        <strong class="result-date" id="result-date">—</strong>
+        <span id="result-status" class="result-status">در انتظار ورود اطلاعات</span>
+        <div class="hero-rule"></div>
+        <div class="result-caption">تاریخ رأس با گردکردن میانگین وزنی به نزدیک‌ترین روز محاسبه می‌شود.</div>
+      </div>
+      <div class="result-details">
+        <div class="detail"><span>جمع کل مبالغ</span><strong id="result-amount">—</strong></div>
+        <div class="detail"><span>تعداد چک‌های معتبر</span><strong id="result-count">۰</strong></div>
+        <div class="detail"><span>میانگین دقیق روز رأس</span><strong id="result-average">—</strong></div>
+        <div class="detail standout"><span>روز رأس پس از گرد کردن</span><strong id="result-days">—</strong></div>
+      </div>
+      <div class="calculation-note"><span class="note-icon">i</span><div><strong>نحوه محاسبه</strong><p>جمع «مبلغ × روز» تقسیم بر جمع مبالغ می‌شود. روزها از تقویم واقعی شمسی محاسبه می‌شوند و سال‌های کبیسه نیز رعایت می‌شوند.</p></div></div>
+      <div class="local-note">اطلاعات چک‌ها در این صفحه به سرور ارسال یا ذخیره نمی‌شود.</div>
+    </aside>
+  </main>
+
+  <footer class="footer"><span>شرکت تأمین کالا باختر</span><span>فرم محاسبه رأس چک — قابل استفاده بدون اینترنت</span></footer>
+  <script>
+/* محاسبه دقیق رأس چک با روزهای واقعی تقویم شمسی و حساب صحیح BigInt */
+(function (root) {
+  'use strict';
+
+  const DAY_MS = 86400000;
+  const formatter = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', {
+    year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC',
+  });
+  const amountFormatter = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 });
+  const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+  const dateCache = new Map();
+
+  function latinDigits(value) {
+    return String(value ?? '')
+      .replace(/[۰-۹]/g, c => String(persianDigits.indexOf(c)))
+      .replace(/[٠-٩]/g, c => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));
+  }
+
+  function digitsOnly(value) {
+    return latinDigits(value).replace(/[^0-9]/g, '');
+  }
+
+  function persianNumber(value) {
+    return String(value).replace(/[0-9]/g, c => persianDigits[Number(c)]);
+  }
+
+  function maskDate(value) {
+    const digits = digitsOnly(value).slice(0, 8);
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 4)}/${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`;
+  }
+
+  function maskAmount(value) {
+    const raw = latinDigits(value);
+    if (/[^0-9,٬\s]/.test(raw)) return raw; // don't silently convert invalid monetary input
+    const digits = raw.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function persianParts(dayNumber) {
+    const utcDate = new Date(dayNumber * DAY_MS);
+    const parts = formatter.formatToParts(utcDate);
+    const get = type => Number(parts.find(x => x.type === type)?.value);
+    return { year: get('year'), month: get('month'), day: get('day') };
+  }
+
+  function compareParts(a, b) {
+    return (a.year - b.year) || (a.month - b.month) || (a.day - b.day);
+  }
+
+  function parseJalaliDate(input) {
+    const digits = digitsOnly(input);
+    if (digits.length !== 8) return { ok: false, message: 'تاریخ باید ۸ رقم داشته باشد.' };
+    const requested = {
+      year: Number(digits.slice(0, 4)),
+      month: Number(digits.slice(4, 6)),
+      day: Number(digits.slice(6, 8)),
+    };
+    if (requested.year < 1300 || requested.year > 1599) {
+      return { ok: false, message: 'سال باید بین ۱۳۰۰ و ۱۵۹۹ شمسی باشد.' };
+    }
+    if (requested.month < 1 || requested.month > 12 || requested.day < 1 || requested.day > 31) {
+      return { ok: false, message: 'ماه یا روز تاریخ نامعتبر است.' };
+    }
+    if (dateCache.has(digits)) return { ok: true, dayNumber: dateCache.get(digits), normalized: maskDate(digits) };
+
+    // Reverse the browser's built-in Persian calendar through a bounded binary search.
+    // The UTC day number avoids local time zone and daylight-saving effects.
+    let low = Math.floor(Date.UTC(requested.year + 621, 0, 1) / DAY_MS);
+    let high = Math.floor(Date.UTC(requested.year + 623, 0, 1) / DAY_MS);
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      const comparison = compareParts(persianParts(middle), requested);
+      if (comparison === 0) {
+        dateCache.set(digits, middle);
+        return { ok: true, dayNumber: middle, normalized: maskDate(digits) };
+      }
+      if (comparison < 0) low = middle + 1;
+      else high = middle - 1;
+    }
+    return { ok: false, message: 'این روز در تقویم شمسی وجود ندارد.' };
+  }
+
+  function formatJalaliDate(dayNumber, usePersianDigits = true) {
+    const p = persianParts(dayNumber);
+    const value = `${p.year}/${String(p.month).padStart(2, '0')}/${String(p.day).padStart(2, '0')}`;
+    return usePersianDigits ? persianNumber(value) : value;
+  }
+
+  function parseAmount(input) {
+    const raw = latinDigits(input).trim();
+    if (!raw) return { ok: false, message: 'مبلغ را وارد کنید.' };
+    if (/[^0-9,٬\s]/.test(raw)) return { ok: false, message: 'مبلغ باید عدد صحیح و مثبت باشد.' };
+    const digits = raw.replace(/[,٬\s]/g, '');
+    if (!/^\d+$/.test(digits)) return { ok: false, message: 'مبلغ نامعتبر است.' };
+    const amount = BigInt(digits);
+    if (amount <= 0n) return { ok: false, message: 'مبلغ باید بزرگ‌تر از صفر باشد.' };
+    return { ok: true, amount };
+  }
+
+  function roundFraction(numerator, denominator) {
+    if (denominator <= 0n) throw new Error('جمع مبلغ چک‌ها باید مثبت باشد.');
+    const absolute = numerator < 0n ? -numerator : numerator;
+    let result = absolute / denominator;
+    if ((absolute % denominator) * 2n >= denominator) result += 1n;
+    return numerator < 0n ? -result : result;
+  }
+
+  function formatAverageDays(numerator, denominator) {
+    const scaled = roundFraction(numerator * 100n, denominator);
+    const sign = scaled < 0n ? '−' : '';
+    const absolute = scaled < 0n ? -scaled : scaled;
+    const whole = absolute / 100n;
+    const fraction = String(absolute % 100n).padStart(2, '0');
+    return `${sign}${amountFormatter.format(whole)}٫${persianNumber(fraction)}`;
+  }
+
+  function formatAmount(amount) {
+    return amountFormatter.format(amount);
+  }
+
+  function calculate(originInput, entries) {
+    const origin = parseJalaliDate(originInput);
+    const resultRows = [];
+    const issues = [];
+    let totalAmount = 0n;
+    let weightedAmountDays = 0n;
+    let validCount = 0;
+    let hasAnyCheck = false;
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const rawAmount = String(entry.amount ?? '').trim();
+      const rawDate = String(entry.date ?? '').trim();
+      if (!rawAmount && !rawDate) {
+        resultRows.push({ state: 'empty', days: null, weighted: null });
+        continue;
+      }
+      hasAnyCheck = true;
+      const amount = parseAmount(rawAmount);
+      const due = parseJalaliDate(rawDate);
+      const errors = [];
+      if (!amount.ok) errors.push(amount.message);
+      if (!due.ok) errors.push(due.message);
+      if (!origin.ok) errors.push('مبدأ رأس‌گیری را کامل و صحیح وارد کنید.');
+
+      if (errors.length) {
+        issues.push({ index: i, message: errors.join(' ') });
+        resultRows.push({ state: 'invalid', days: null, weighted: null, message: errors.join(' ') });
+        continue;
+      }
+
+      const days = due.dayNumber - origin.dayNumber;
+      const weighted = amount.amount * BigInt(days);
+      totalAmount += amount.amount;
+      weightedAmountDays += weighted;
+      validCount++;
+      resultRows.push({ state: 'valid', days, weighted, amount: amount.amount, dueDay: due.dayNumber });
+    }
+
+    if (!origin.ok && hasAnyCheck) issues.unshift({ index: -1, message: origin.message });
+    const ready = origin.ok && validCount > 0 && issues.length === 0;
+    const roundedDays = ready ? roundFraction(weightedAmountDays, totalAmount) : null;
+    return {
+      ready,
+      origin,
+      hasAnyCheck,
+      rows: resultRows,
+      issues,
+      validCount,
+      totalAmount,
+      weightedAmountDays,
+      averageDays: ready ? formatAverageDays(weightedAmountDays, totalAmount) : null,
+      roundedDays,
+      maturityDay: ready ? origin.dayNumber + Number(roundedDays) : null,
+      maturityDate: ready ? formatJalaliDate(origin.dayNumber + Number(roundedDays)) : null,
+    };
+  }
+
+  const api = {
+    latinDigits, digitsOnly, persianNumber, maskDate, maskAmount,
+    parseJalaliDate, formatJalaliDate, parseAmount, roundFraction,
+    formatAverageDays, formatAmount, calculate,
+  };
+  root.RasCore = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+  <script>
+(() => {
+  'use strict';
+  const core = window.RasCore;
+  const body = document.getElementById('checks-body');
+  const originField = document.getElementById('origin-date');
+  const printButton = document.getElementById('print-button');
+  let nextRowId = 1;
+
+  const $ = id => document.getElementById(id);
+
+  function element(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
+
+  function caretAfterDigits(text, desiredCount) {
+    if (desiredCount <= 0) return 0;
+    let seen = 0;
+    for (let i = 0; i < text.length; i++) {
+      if (/\d/.test(text[i])) seen++;
+      if (seen === desiredCount) return i + 1;
+    }
+    return text.length;
+  }
+
+  function maskFocusedField(input, format) {
+    const prior = input.value;
+    const priorCaret = input.selectionStart ?? prior.length;
+    const numberBeforeCaret = core.digitsOnly(prior.slice(0, priorCaret)).length;
+    const masked = format(prior);
+    if (masked === prior) return;
+    input.value = masked;
+    const nextCaret = caretAfterDigits(masked, numberBeforeCaret);
+    input.setSelectionRange(nextCaret, nextCaret);
+  }
+
+  function handleDateBackspace(event) {
+    const field = event.currentTarget;
+    if (event.key !== 'Backspace' || field.selectionStart !== field.selectionEnd) return;
+    const pos = field.selectionStart;
+    if (pos < 2 || field.value[pos - 1] !== '/') return;
+    event.preventDefault();
+    const precedingDigits = core.digitsOnly(field.value.slice(0, pos)).length;
+    const digits = core.digitsOnly(field.value);
+    const removeIndex = precedingDigits - 1;
+    field.value = core.maskDate(digits.slice(0, removeIndex) + digits.slice(removeIndex + 1));
+    const nextCaret = caretAfterDigits(field.value, removeIndex);
+    field.setSelectionRange(nextCaret, nextCaret);
+    update();
+  }
+
+  function addRow(amount = '', date = '', shouldFocus = false) {
+    const row = element('tr');
+    row.dataset.rowId = String(nextRowId++);
+    const indexCell = element('td', 'row-index');
+    const amountCell = element('td');
+    const amountInput = element('input', 'amount-field');
+    amountInput.type = 'text';
+    amountInput.inputMode = 'numeric';
+    amountInput.autocomplete = 'off';
+    amountInput.maxLength = 40;
+    amountInput.placeholder = '250,000,000';
+    amountInput.dir = 'ltr';
+    amountInput.value = core.maskAmount(amount);
+    amountCell.appendChild(amountInput);
+    const amountError = element('span', 'row-message');
+    amountCell.appendChild(amountError);
+
+    const dateCell = element('td');
+    const dateInput = element('input', 'date-field');
+    dateInput.type = 'text';
+    dateInput.inputMode = 'numeric';
+    dateInput.autocomplete = 'off';
+    dateInput.maxLength = 10;
+    dateInput.placeholder = '14050820';
+    dateInput.dir = 'ltr';
+    dateInput.value = core.maskDate(date);
+    dateCell.appendChild(dateInput);
+
+    const daysCell = element('td', 'day-value', '—');
+    const weightedCell = element('td', 'weighted-value', '—');
+    const removeCell = element('td');
+    const removeButton = element('button', 'delete-row', '×');
+    removeButton.type = 'button';
+    removeButton.title = 'حذف این چک';
+    removeButton.setAttribute('aria-label', 'حذف ردیف چک');
+    removeButton.addEventListener('click', () => {
+      if (body.children.length <= 1) {
+        amountInput.value = '';
+        dateInput.value = '';
+      } else {
+        row.remove();
+      }
+      update();
+    });
+    removeCell.appendChild(removeButton);
+    row.append(indexCell, amountCell, dateCell, daysCell, weightedCell, removeCell);
+    body.appendChild(row);
+
+    amountInput.addEventListener('input', () => { maskFocusedField(amountInput, core.maskAmount); update(); });
+    dateInput.addEventListener('input', () => { maskFocusedField(dateInput, core.maskDate); update(); });
+    dateInput.addEventListener('keydown', handleDateBackspace);
+    dateInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addRow('', '', true);
+      }
+    });
+    if (shouldFocus) amountInput.focus();
+    update();
+    return row;
+  }
+
+  function entriesAndRows() {
+    const rows = Array.from(body.querySelectorAll('tr'));
+    const entries = rows.map(row => ({
+      amount: row.querySelector('.amount-field').value,
+      date: row.querySelector('.date-field').value,
+    }));
+    return { rows, entries };
+  }
+
+  function setDetail(id, value) { $(id).textContent = value; }
+
+  function update() {
+    const { rows, entries } = entriesAndRows();
+    const result = core.calculate(originField.value, entries);
+    const enteredCount = entries.filter(x => x.amount.trim() || x.date.trim()).length;
+    setDetail('row-count', `${core.persianNumber(enteredCount)} چک`);
+    setDetail('result-count', core.persianNumber(result.validCount));
+    setDetail('result-amount', result.validCount ? core.formatAmount(result.totalAmount) : '—');
+    setDetail('table-total-amount', result.validCount ? core.formatAmount(result.totalAmount) : '—');
+    setDetail('table-total-weighted', result.validCount ? core.formatAmount(result.weightedAmountDays) : '—');
+
+    const digitsInOrigin = core.digitsOnly(originField.value);
+    const showOriginError = digitsInOrigin.length === 8 && !result.origin.ok;
+    originField.classList.toggle('invalid', showOriginError);
+    setDetail('origin-error', showOriginError ? result.origin.message : '');
+
+    rows.forEach((row, i) => {
+      row.querySelector('.row-index').textContent = core.persianNumber(i + 1);
+      row.querySelector('.amount-field').setAttribute('aria-label', `مبلغ چک ردیف ${i + 1}`);
+      row.querySelector('.date-field').setAttribute('aria-label', `تاریخ چک ردیف ${i + 1}`);
+      const detail = result.rows[i];
+      row.classList.toggle('error-row', detail.state === 'invalid');
+      row.classList.toggle('empty-row', detail.state === 'empty');
+      row.querySelector('.amount-field').classList.toggle('invalid', detail.state === 'invalid' && !core.parseAmount(entries[i].amount).ok);
+      row.querySelector('.date-field').classList.toggle('invalid', detail.state === 'invalid' && !core.parseJalaliDate(entries[i].date).ok);
+      row.querySelector('.row-message').textContent = detail.state === 'invalid' ? 'ردیف ناقص یا نامعتبر' : '';
+      row.querySelector('.day-value').textContent = detail.state === 'valid' ? core.persianNumber(detail.days) : '—';
+      row.querySelector('.weighted-value').textContent = detail.state === 'valid' ? core.formatAmount(detail.weighted) : '—';
+    });
+
+    const warningBox = $('issues-box');
+    const uniqueIssues = Array.from(new Set(result.issues.map(x => x.index < 0 ? x.message : `ردیف ${core.persianNumber(x.index + 1)}: ${x.message}`)));
+    if (enteredCount && !result.origin.ok && !uniqueIssues.includes(result.origin.message)) {
+      uniqueIssues.unshift(`مبدأ: ${result.origin.message}`);
+    }
+    warningBox.hidden = uniqueIssues.length === 0;
+    warningBox.textContent = uniqueIssues.slice(0, 5).join('  |  ') + (uniqueIssues.length > 5 ? `  و ${core.persianNumber(uniqueIssues.length - 5)} مورد دیگر` : '');
+
+    printButton.disabled = !result.ready;
+    const status = $('result-status');
+    status.className = 'result-status';
+    if (result.ready) {
+      setDetail('result-date', result.maturityDate);
+      setDetail('result-average', `${result.averageDays} روز`);
+      setDetail('result-days', `${core.persianNumber(result.roundedDays)} روز`);
+      status.textContent = 'محاسبه نهایی آماده است';
+      status.classList.add('ready');
+    } else {
+      setDetail('result-date', '—');
+      setDetail('result-average', '—');
+      setDetail('result-days', '—');
+      if (enteredCount) {
+        status.textContent = 'لطفاً ردیف‌های ناقص را تکمیل کنید';
+        status.classList.add('warning');
+      } else {
+        status.textContent = 'در انتظار ورود اطلاعات';
+      }
+    }
+  }
+
+  originField.addEventListener('input', () => { maskFocusedField(originField, core.maskDate); update(); });
+  originField.addEventListener('keydown', handleDateBackspace);
+  $('add-row').addEventListener('click', () => addRow('', '', true));
+  $('clear-button').addEventListener('click', () => {
+    if (!window.confirm('همه تاریخ‌ها و مبالغ واردشده پاک شوند؟')) return;
+    originField.value = '';
+    body.replaceChildren();
+    for (let i = 0; i < 5; i++) addRow();
+    originField.focus();
+    update();
+  });
+  printButton.addEventListener('click', () => {
+    if (!printButton.disabled) window.print();
+  });
+
+  for (let i = 0; i < 5; i++) addRow();
+  update();
+})();
+
+</script>
+<template id="vazirmatn-license" hidden>Copyright 2015 The Vazirmatn Project Authors (https://github.com/rastikerdar/vazirmatn)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION &amp; CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+</template>
+<script src="/assets/js/systems.js"></script>
+</body>
+</html>

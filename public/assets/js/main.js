@@ -271,14 +271,15 @@
   // روی دامنه (پشت ابرآروان) استعلام چک از زیردامنه‌ی خودش باز می‌شود؛ با IP از پورت خودش
   var onDomain = !/^(\d+\.){3}\d+$|^\[|^localhost$/.test(location.hostname);
   var privateHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.)|^localhost$/.test(location.hostname);
-  function portalAddr(name) { return onDomain && HOSTS[name] ? HOSTS[name] : location.hostname + ':' + PORTS[name]; }
-  function portalUrl(name) { return location.protocol + '//' + portalAddr(name) + '/'; }
+  // data-path: سامانه‌ای که زیر همان پورت است (مثلاً /ras-chek/ روی پورت سامانه‌های داخلی)
+  function portalAddr(name, path) { return (onDomain && HOSTS[name] ? HOSTS[name] : location.hostname + ':' + PORTS[name]) + (path && path !== '/' ? path.replace(/\/$/, '') : ''); }
+  function portalUrl(name, path) { return location.protocol + '//' + portalAddr(name) + (path || '/'); }
   function paintPortal() {
-    document.querySelectorAll('[data-portal]').forEach(function (a) { a.href = portalUrl(a.getAttribute('data-portal')); });
-    document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = portalAddr(s.getAttribute('data-addr')); });
+    document.querySelectorAll('[data-portal]').forEach(function (a) { a.href = portalUrl(a.getAttribute('data-portal'), a.getAttribute('data-path')); });
+    document.querySelectorAll('[data-addr]').forEach(function (s) { s.textContent = portalAddr(s.getAttribute('data-addr'), s.getAttribute('data-path')); });
   }
   paintPortal();
-  // سامانه‌ی بیمه و حواله فقط وقتی سایت با IP خصوصی (داخل شرکت) باز شده نشان داده می‌شود؛
+  // سامانه‌های داخلی (بیمه و حواله، رأس‌گیری، گزارش تحفه، کنترل موجودی) فقط وقتی سایت با IP خصوصی (داخل شرکت) باز شده نشان داده می‌شوند؛
   // با IP عمومی یا دامنه کارت آن پنهان است (پورت آن هم از بیرون بسته است)
   if (!privateHost) document.querySelectorAll('[data-internal]').forEach(function (el) {
     el.hidden = true; el.parentNode.classList.add('solo');
@@ -293,8 +294,11 @@
     }).catch(function () {});
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {
-      var url = portalUrl(b.getAttribute('data-copy')), span = b.querySelector('[data-addr]'), old = span.textContent;
-      var done = function () { span.textContent = 'کپی شد ✓'; setTimeout(function () { span.textContent = old; }, 1500); };
+      var url = portalUrl(b.getAttribute('data-copy'), b.getAttribute('data-path')), span = b.querySelector('[data-addr]'), old = span.textContent;
+      var done = function () {
+        if (span.hidden) { b.classList.add('copied'); setTimeout(function () { b.classList.remove('copied'); }, 1500); return; }
+        span.textContent = 'کپی شد ✓'; setTimeout(function () { span.textContent = old; }, 1500);
+      };
       if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function () { window.prompt('نشانی را کپی کنید:', url); });
       else window.prompt('نشانی را کپی کنید:', url);
     });
