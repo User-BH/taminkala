@@ -28,6 +28,10 @@ git -C "$PUB" init -q -b "$BRANCH"
 git -C "$PUB" add -A
 git -C "$PUB" -c user.name="$(git -C "$REPO" config user.name || echo publisher)" -c user.email="$(git -C "$REPO" config user.email || echo publisher@localhost)" \
   commit -qm "Windows package $VERSION"
-git -C "$PUB" push -q -f "$(git -C "$REPO" remote get-url origin)" "HEAD:refs/heads/$BRANCH"
+# Import the generated commit into the authenticated checkout, then push from there.
+# actions/checkout stores its token in this repository's Git config; a fresh repo
+# such as $PUB does not inherit that authentication.
+git -C "$REPO" fetch -q --no-tags "$PUB" "$BRANCH"
+git -C "$REPO" push -q -f origin "FETCH_HEAD:refs/heads/$BRANCH"
 echo "✔ published $VERSION to branch $BRANCH"
 rm -rf "$OUT"
