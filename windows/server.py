@@ -30,10 +30,10 @@ DATA_DIR, LOG_DIR = ROOT / "data", ROOT / "logs"
 CONFIG_FILE = DATA_DIR / "config.json"
 # bime_allow: فقط این شبکه‌ها به سامانه بیمه و حواله دسترسی دارند (شبکه داخلی شرکت و خود سرور)
 PRIVATE_NETS = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128"]
-# pichak_host: subdomain(s) (one name or a list) that serve the cheque inquiry on the site port,
+# pichak_host: subdomain that serves the cheque inquiry on the site port,
 # so it works behind a CDN such as ArvanCloud with HTTPS (CDNs usually pass only ports 80/443)
 DEFAULTS = {"site_port": 80, "pichak_port": 8081, "bime_port": 8082, "pichak_ocr": True, "threads": 8, "bime_allow": PRIVATE_NETS,
-            "pichak_host": ["check.tkbp.ir", "check.tamintabriz.ir"]}
+            "pichak_host": "check.tkbp.ir"}
 
 mimetypes.add_type("font/woff2", ".woff2")
 mimetypes.add_type("image/webp", ".webp")
@@ -66,9 +66,10 @@ def load_config() -> dict:
         cfg[k] = int(cfg[k])
     if len({cfg["site_port"], cfg["pichak_port"], cfg["bime_port"]}) != 3:
         raise SystemExit("config.json: the three ports must be different")
-    hosts = cfg.get("pichak_host") or []
-    hosts = [hosts] if isinstance(hosts, str) else hosts
-    cfg["_pichak_hosts"] = [h.strip().lower().rstrip(".") for h in hosts if str(h).strip()]
+    host = cfg.get("pichak_host") or ""
+    if isinstance(host, list):
+        host = next((h for h in host if str(h).strip()), "")
+    cfg["_pichak_hosts"] = [str(host).strip().lower().rstrip(".")] if str(host).strip() else []
     cfg["pichak_host"] = cfg["_pichak_hosts"][0] if cfg["_pichak_hosts"] else ""
     cfg["_bime_nets"] = [ipaddress.ip_network(n, strict=False) for n in cfg.get("bime_allow") or PRIVATE_NETS]
     return cfg

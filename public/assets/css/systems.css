@@ -52,12 +52,14 @@
   .result-hero { background: radial-gradient(circle at 0% 0%, rgba(207, 23, 37, .35), transparent 55%), linear-gradient(150deg, #1d1b20, #3a0f17) !important; }
   .origin-card, .checks-card, .result-details, .control-card, .stat-card, .metric-card { border-color: var(--tk-line) !important; border-radius: 18px !important; }
 
-  /* کنترل موجودی: متغیرهای رنگ خودش */
-  :root:not([data-theme="dark"]) body.sys-inventory { --accent: #cf1725; --accent-ink: #fff; --accent-soft: #fdecea; --bg: #f7f3ef; --line: #e7ddd6; --sunk: #f1ebe5; }
+  /* کنترل موجودی: پالت روشن و هماهنگ با دیگر سامانه‌های داخلی */
+  body.sys-inventory {
+    --bg: #f7f3ef; --panel: #fff; --sunk: #f1ebe5; --line: #e7ddd6; --fg: #26343c; --muted: #6e7983;
+    --accent: #cf1725; --accent-ink: #fff; --accent-soft: #fdecea;
+    --good: #1f7a4d; --good-bg: #e1f2e8; --bad: #b4342d; --bad-bg: #fbe5e3; --warn: #9a6200; --warn-bg: #fdf0d6;
+    --info: #8f2530; --info-bg: #f9e9e8; --mute-bg: #eee8e3; color-scheme: light;
+  }
   body.sys-inventory .wrap > .head h1 { display: none; }
-}
-@media screen and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body.sys-inventory { --accent: #ff6b76; --accent-soft: #3a1a1c; }
 }
 
 @media (max-width: 640px) {
