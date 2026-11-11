@@ -216,13 +216,13 @@
       pop.querySelector('.bp-next').addEventListener('click', function () { show(at + 1); });
       pop.addEventListener('click', function (e) { if (e.target === pop) pop.close(); });   // کلیک بیرون پنجره
       pop.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') show(at + 1); else if (e.key === 'ArrowRight') show(at - 1);
+        if (e.key === 'ArrowRight') show(at + 1); else if (e.key === 'ArrowLeft') show(at - 1);   // هم‌جهت با دکمه‌ها: راست = بعدی
       });
       var tx = null;   // ورق زدن با انگشت
       pop.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
       pop.addEventListener('touchend', function (e) {
         if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; tx = null;
-        if (Math.abs(dx) > 50) show(dx < 0 ? at + 1 : at - 1);
+        if (Math.abs(dx) > 50) show(dx > 0 ? at + 1 : at - 1);
       });
     }
   }
@@ -244,12 +244,12 @@
     gp.querySelector('.bp-prev').addEventListener('click', function () { gShow(gAt - 1); });
     gp.querySelector('.bp-next').addEventListener('click', function () { gShow(gAt + 1); });
     gp.addEventListener('click', function (e) { if (e.target === gp) gp.close(); });
-    gp.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') gShow(gAt + 1); else if (e.key === 'ArrowRight') gShow(gAt - 1); });
+    gp.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight') gShow(gAt + 1); else if (e.key === 'ArrowLeft') gShow(gAt - 1); });
     var gx = null;
     gp.addEventListener('touchstart', function (e) { gx = e.touches[0].clientX; }, { passive: true });
     gp.addEventListener('touchend', function (e) {
       if (gx === null) return; var dx = e.changedTouches[0].clientX - gx; gx = null;
-      if (Math.abs(dx) > 50) gShow(dx < 0 ? gAt + 1 : gAt - 1);
+      if (Math.abs(dx) > 50) gShow(dx > 0 ? gAt + 1 : gAt - 1);
     });
   }
 
