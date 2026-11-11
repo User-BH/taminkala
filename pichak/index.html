@@ -828,7 +828,10 @@
         deferred.prompt();
         deferred.userChoice.finally(function () { deferred = null; sheet.hidden = true; chip.hidden = true; });
     });
-    window.addEventListener('appinstalled', function () { sheet.hidden = true; chip.hidden = true; });
+    window.addEventListener('appinstalled', function () {
+        sheet.hidden = true; chip.hidden = true;
+        try { navigator.sendBeacon('/__s', new Blob([JSON.stringify({ k: 'install', t: 'pichak' })], { type: 'application/json' })); } catch (e) {}   // آمار نصب
+    });
 
     // فقط روی گوشی، چند ثانیه بعد از باز شدن، و اگر کاربر در ۷ روز گذشته «بعداً» نزده باشد
     if (mobile) {

@@ -239,6 +239,11 @@ svg.i { width: 1.25em; height: 1.25em; flex-shrink: 0; }
 .portal-internal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; }
 .portal-internal[hidden] { display: none; }
 .pi-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.pi-head > div { flex: 1; }
+.pi-stats { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--red); padding: 8px 13px; border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--soft); transition: background .2s, color .2s; }
+.pi-stats:hover { background: var(--red); color: #fff; }
+.pi-stats svg { width: 16px; height: 16px; }
 .pi-head h3 { font-size: 18px; font-weight: 900; margin: 0; }
 .pi-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
 .pi-lock { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: #23242a; color: #fff; flex: none; }

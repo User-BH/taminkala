@@ -23,6 +23,7 @@ import mimetypes
 import os
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs
 
 ROOT = Path(__file__).resolve().parent
 SITE_DIR, BIME_DIR, PICHAK_DIR = ROOT / "public", ROOT / "bime", ROOT / "pichak"
@@ -190,7 +191,7 @@ def static_app(root: Path, extra_roots: dict[str, Path] | None = None, extra_fil
 
 
 # ---------------------------------------------------------------- pichak
-def pichak_app(cfg, log):
+def pichak_app(cfg, log, stats):
     os.environ["PICHAK_OCR"] = "1" if cfg.get("pichak_ocr", True) else "0"
     os.environ.setdefault("PICHAK_DUMP_DIR", str(LOG_DIR / "cbi"))   # unrecognized bank answers, for support
     sys.path.insert(0, str(PICHAK_DIR))
@@ -206,12 +207,38 @@ def pichak_app(cfg, log):
         return broken
     assets = static_app(SITE_DIR)
 
+    def _counted_inquiry(environ, start_response):
+        """نتیجه‌ی استعلام برای آمار: ثبت‌شده / ثبت‌نشده / نامشخص / خطا (پاسخ بدون تغییر به کاربر می‌رسد)"""
+        captured = {}
+
+        def sr(status, headers, exc_info=None):
+            captured["status"] = status
+            return start_response(status, headers, exc_info) if exc_info else start_response(status, headers)
+        body = b"".join(flask_app(environ, sr))
+        result = "error"
+        if captured.get("status", "").startswith("200"):
+            try:
+                reg = json.loads(body).get("is_registered")
+                result = "registered" if reg is True else "not_registered" if reg is False else "unknown"
+            except ValueError:
+                pass
+        if not stats.is_bot(environ):
+            stats.record(environ, "inquiry", result)
+        return [body]
+
     def app(environ, start_response):
         path = environ.get("PATH_INFO", "/")
         if path.startswith("/assets/") or path == "/404.html":
             return assets(environ, start_response)
+        if path == "/__s" and environ["REQUEST_METHOD"] == "POST":
+            return stats.beacon(environ, start_response)
+        if path == "/api/inquire" and environ["REQUEST_METHOD"] == "POST":
+            return _counted_inquiry(environ, start_response)
         if path.startswith("/api/"):
             return flask_app(environ, start_response)
+        if path == "/" and environ["REQUEST_METHOD"] == "GET" and not stats.is_bot(environ):
+            # start_url برنامه‌ی نصب‌شده ?source=app دارد
+            stats.record(environ, "view", "app" if "source=app" in environ.get("QUERY_STRING", "") else "pichak", source=True)
         # صفحه‌های پیچک؛ اگر برنامه ۴۰۴ داد، ۴۰۴ قالب تأمین کالا نشان داده شود
         captured = {}
 
@@ -230,10 +257,20 @@ def pichak_app(cfg, log):
 
 
 # ---------------------------------------------------------------- dispatch
+INTERNAL_SYSTEMS = {"/": "bime", "/index.html": "bime", "/ras-chek/": "ras-chek", "/tohfe/": "tohfe", "/inventory/": "inventory"}
+
+
 def build(cfg, log):
     site = static_app(SITE_DIR)
+    from stats import Stats   # windows/stats.py، کنار همین فایل
+    stats = Stats(DATA_DIR, log)
 
     def site_app(environ, start_response):
+        path = environ.get("PATH_INFO", "/")
+        if path == "/__s" and environ["REQUEST_METHOD"] == "POST":
+            return stats.beacon(environ, start_response)
+        if path in ("/", "/index.html") and environ["REQUEST_METHOD"] == "GET" and not stats.is_bot(environ):
+            stats.record(environ, "view", "site", source=True)
         if environ.get("PATH_INFO") == "/ports.json":   # «internal» برای نمایش یا قفل کارت بیمه در سایت
             # زیردامنه‌ی استعلام چک هم‌دامنه با همان نشانی‌ای که سایت با آن باز شده (tkbp.ir → check.tkbp.ir)
             asked = _host(environ).removeprefix("www.")
@@ -253,9 +290,22 @@ def build(cfg, log):
                 return site_assets(environ, start_response)
             log.warning("bime blocked for %s (host %s)", environ.get("REMOTE_ADDR"), environ.get("HTTP_HOST"))
             return _internal_only(start_response)
+        path = environ.get("PATH_INFO", "/")
+        if path == "/stats/api.json":   # داشبورد آمار (فقط شبکه‌ی داخلی)
+            qs = parse_qs(environ.get("QUERY_STRING", ""))
+            try:
+                days = int(qs.get("days", ["30"])[0])
+            except ValueError:
+                days = 30
+            body = json.dumps(stats.report(days), ensure_ascii=False).encode()
+            start_response("200 OK", [("Content-Type", "application/json; charset=utf-8"), ("Cache-Control", "no-store"), ("Content-Length", str(len(body)))])
+            return [body]
+        system = INTERNAL_SYSTEMS.get(path) or INTERNAL_SYSTEMS.get(path + "/")
+        if system and environ["REQUEST_METHOD"] == "GET" and not stats.is_bot(environ):
+            stats.record(environ, "system", system)
         return bime(environ, start_response)
 
-    pichak = pichak_app(cfg, log)
+    pichak = pichak_app(cfg, log, stats)
     apps = {
         cfg["site_port"]: site_app,
         cfg["pichak_port"]: pichak,
@@ -281,8 +331,11 @@ def main():
     listen = " ".join(f"0.0.0.0:{cfg[k]}" for k in ("site_port", "pichak_port", "bime_port"))
     log.info("starting: site=%s pichak=%s bime=%s (bime allowed from %s)%s", cfg["site_port"], cfg["pichak_port"], cfg["bime_port"],
              ", ".join(map(str, cfg["_bime_nets"])), f"; pichak also at {', '.join(cfg['_pichak_hosts'])}" if cfg["_pichak_hosts"] else "")
+    # clear_untrusted_proxy_headers=False: هدرهای X-Forwarded-For/Ar-Real-IP ابرآروان فقط برای شمارش بازدیدکننده‌ی یکتا
+    # خوانده می‌شوند؛ دسترسی سامانه‌های داخلی همچنان فقط با نشانی واقعی اتصال (REMOTE_ADDR) سنجیده می‌شود
     serve(build(cfg, log), listen=listen, threads=int(cfg.get("threads", 8)), ident="TaminKala",
-          channel_timeout=130)   # استعلام بانک مرکزی ممکن است طول بکشد
+          channel_timeout=130,   # استعلام بانک مرکزی ممکن است طول بکشد
+          clear_untrusted_proxy_headers=False)
 
 
 if __name__ == "__main__":

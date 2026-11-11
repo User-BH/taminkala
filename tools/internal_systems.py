@@ -20,8 +20,20 @@ BACK = ('<a class="sys-back" href="/" title="بازگشت به فهرست سام
         '<span>سامانه‌ها</span></a>')
 
 
+def neutralize(s: str) -> str:
+    """Remove traces of the editor the tool was first built in (meta tags, its storage API name, messages)."""
+    s = re.sub(r'\s*<meta name="claude:[^"]*"[^>]*>', "", s)
+    s = s.replace("(no Claude viewer)", "(no shared viewer)")
+    s = re.sub(r"/\* Layout: [^*]*\*/\n?", "", s)   # design-brief comment
+    s = s.replace("صفحه را در claude.ai باز کنید.", "مرورگر دیگری را امتحان کنید.")
+    s = re.sub(r"\bwindow\.claude\b", "window.tkbStore", s)
+    s = re.sub(r"(?<![\w.])claude\.use\(", "tkbStore.use(", s)
+    assert not re.search(r"claude", s, re.I), "editor trace left"
+    return s
+
+
 def convert(src: Path, slug: str, title: str) -> Path:
-    s = src.read_text(encoding="utf-8")
+    s = neutralize(src.read_text(encoding="utf-8"))
     # shared font and logo instead of ~150 KB + ~45 KB per copy embedded in every page
     s = re.sub(r'@font-face\{font-family:"?Vazirmatn"?;src:url\("?data:font/woff2;base64,[A-Za-z0-9+/=]+"?\) format\("woff2"\);[^}]*\}', "", s)
     s = re.sub(r'(<link rel="icon"[^>]*href=")data:image/png;base64,[A-Za-z0-9+/=]+', r"\1/assets/img/favicon-32.png", s)

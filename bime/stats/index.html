@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>آمار بازدید | تأمین کالا باختر</title>
+  <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32">
+  <link rel="stylesheet" href="/assets/css/systems.css">
+  <!-- داشبورد آمار بازدید سایت، استعلام چک و سامانه‌های داخلی. داده‌ها از /stats/api.json روی همین سرور.
+       طراحی و توسعه: شرکت رهوار پیوند داده -->
+  <style>
+    :root { --ink: #23242a; --muted: #6f6a6b; --line: #ebe2db; --card: #fff; --red: #cf1725; --red2: #e5394a; --ink2: #4b3a3c; --good: #087c5f; --bad: #b4342d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Vazirmatn", Tahoma, sans-serif; color: var(--ink); background: #f7f3ef; }
+    .main { max-width: 1240px; margin: auto; padding: 24px 24px 50px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .toolbar h2 { margin: 0; font-size: 20px; }
+    .toolbar p { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); }
+    .period { display: flex; gap: 4px; padding: 4px; border-radius: 13px; background: #fff; border: 1px solid var(--line); }
+    .period button { font: inherit; font-size: 13px; font-weight: 800; border: 0; background: none; color: var(--muted); padding: 7px 14px; border-radius: 9px; cursor: pointer; }
+    .period button[aria-pressed="true"] { background: var(--red); color: #fff; box-shadow: 0 6px 14px rgba(207,23,37,.28); }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+    .kpi span { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+    .kpi b { display: block; font-size: 30px; font-weight: 900; line-height: 1.35; margin-top: 2px; }
+    .kpi small { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .up { color: var(--good) !important; } .down { color: var(--bad) !important; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; min-width: 0; }
+    .card.span2 { grid-column: span 2; } .card.span3 { grid-column: 1 / -1; }
+    .card h3 { margin: 0 0 4px; font-size: 15.5px; }
+    .card .sub { margin: 0 0 14px; font-size: 12px; color: var(--muted); }
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-left: 6px; vertical-align: -1px; }
+    svg.chart { width: 100%; height: 240px; display: block; overflow: visible; }
+    svg.chart text { font-family: inherit; font-size: 11px; fill: #8b8486; }
+    .bars { display: grid; gap: 9px; }
+    .bar { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 4.5em; align-items: center; gap: 10px; font-size: 13px; }
+    .bar > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar .track { display: block; height: 10px; border-radius: 99px; background: #f3ece7; overflow: hidden; }
+    .bar .fill { display: block; height: 100%; border-radius: inherit; background: var(--red); }
+    .bar b { text-align: left; font-variant-numeric: tabular-nums; }
+    .stack { display: flex; height: 16px; border-radius: 99px; overflow: hidden; background: #f3ece7; margin: 6px 0 14px; }
+    .stack span { display: block; height: 100%; }
+    .keys { display: grid; gap: 8px; font-size: 13px; }
+    .keys div { display: flex; justify-content: space-between; gap: 8px; }
+    .keys i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-left: 7px; }
+    .empty { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
+    .hours { direction: ltr; display: grid; grid-template-columns: repeat(24, 1fr); align-items: end; gap: 3px; height: 120px; }
+    .hours span { background: #f0c5c8; border-radius: 4px 4px 0 0; min-height: 2px; }
+    .hours span.peak { background: var(--red); }
+    .hours-axis { display: grid; grid-template-columns: repeat(4, 1fr); font-size: 11px; color: #8b8486; margin-top: 5px; direction: ltr; }
+    .note { font-size: 12px; color: var(--muted); line-height: 2; margin-top: 18px; }
+    .err { background: #fff5f4; border: 1px solid #f3cfcc; color: var(--bad); border-radius: 12px; padding: 12px 14px; font-size: 13px; margin-bottom: 14px; }
+    @media (max-width: 980px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid { grid-template-columns: minmax(0, 1fr); } .card.span2 { grid-column: auto; } }
+    @media (max-width: 560px) { .main { padding: 16px 12px 40px; } .kpi b { font-size: 24px; } .period button { padding: 7px 10px; } svg.chart { height: 200px; } }
+  </style>
+</head>
+<body class="sys-stats">
+<header class="sys-bar"><div class="sys-bar-in"><div class="sys-brand">
+  <img src="/assets/img/logo-192.webp" alt="لوگوی تأمین کالا باختر" width="58" height="58">
+  <div><span>شرکت تأمین کالا باختر</span><h1>آمار بازدید</h1></div></div>
+  <div class="sys-tools"><a class="sys-back" href="/" title="بازگشت به فهرست سامانه‌ها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>سامانه‌ها</span></a></div>
+</div></header>
+
+<main class="main">
+  <div class="toolbar">
+    <div><h2>گزارش بازدید</h2><p id="range">—</p></div>
+    <div class="period" role="group" aria-label="بازه‌ی زمانی">
+      <button type="button" data-days="7">۷ روز</button>
+      <button type="button" data-days="30" aria-pressed="true">۳۰ روز</button>
+      <button type="button" data-days="90">۳ ماه</button>
+      <button type="button" data-days="365">یک سال</button>
+    </div>
+  </div>
+  <div class="err" id="err" hidden></div>
+
+  <div class="kpis">
+    <div class="kpi"><span>بازدید سایت</span><b id="k-views">—</b><small id="d-views"></small></div>
+    <div class="kpi"><span>بازدیدکننده‌ی یکتا</span><b id="k-visitors">—</b><small id="d-visitors"></small></div>
+    <div class="kpi"><span>استعلام چک</span><b id="k-inq">—</b><small id="d-inq"></small></div>
+    <div class="kpi"><span>استفاده از سامانه‌های داخلی</span><b id="k-sys">—</b><small id="d-sys"></small></div>
+  </div>
+
+  <div class="grid">
+    <section class="card span3">
+      <h3>روند روزانه</h3>
+      <div class="legend"><span><i style="background:#cf1725"></i>بازدید سایت</span><span><i style="background:#23242a"></i>بازدیدکننده‌ی یکتا</span><span><i style="background:#e9a23b"></i>استعلام چک</span></div>
+      <svg class="chart" id="trend" role="img" aria-label="نمودار بازدید روزانه"></svg>
+    </section>
+
+    <section class="card span2">
+      <h3>بخش‌های دیده‌شده‌ی سایت</h3>
+      <p class="sub">چند درصد بازدیدها به هر بخش رسیده‌اند</p>
+      <div class="bars" id="sections"></div>
+    </section>
+    <section class="card">
+      <h3>گوشی یا کامپیوتر</h3>
+      <p class="sub">بر اساس بازدیدکننده‌ی یکتای سایت</p>
+      <div class="stack" id="devBar"></div>
+      <div class="keys" id="devKeys"></div>
+      <h3 style="margin-top:22px">از کجا آمده‌اند</h3>
+      <p class="sub">بدون بازدیدهای داخل خود سایت</p>
+      <div class="bars" id="sources"></div>
+    </section>
+
+    <section class="card span2">
+      <h3>برندهایی که بیشتر باز شده‌اند</h3>
+      <p class="sub">تعداد باز شدن پنجره‌ی هر برند در بخش برندهای همکار</p>
+      <div class="bars" id="brands"></div>
+    </section>
+    <section class="card">
+      <h3>نتیجه‌ی استعلام‌های چک</h3>
+      <p class="sub" id="inqSub">—</p>
+      <div class="stack" id="inqBar"></div>
+      <div class="keys" id="inqKeys"></div>
+      <div class="keys" style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+        <div><span>باز شدن صفحه‌ی استعلام</span><b id="pv">—</b></div>
+        <div><span>باز شدن از برنامه‌ی نصب‌شده</span><b id="apps">—</b></div>
+        <div><span>نصب برنامه روی گوشی</span><b id="installs">—</b></div>
+      </div>
+    </section>
+
+    <section class="card span2">
+      <h3>سامانه‌های داخلی</h3>
+      <p class="sub">دفعات باز شدن هر سامانه از شبکه‌ی شرکت</p>
+      <div class="bars" id="systems"></div>
+    </section>
+    <section class="card">
+      <h3>ساعت‌های پرکار</h3>
+      <p class="sub" id="peak">—</p>
+      <div class="hours" id="hours"></div>
+      <div class="hours-axis"><span>۰</span><span>۶</span><span>۱۲</span><span>۱۸</span></div>
+    </section>
+  </div>
+
+  <p class="note">آمار فقط روی سرور شرکت نگه داشته می‌شود؛ نشانی IP ذخیره نمی‌شود و کوکی‌ای به کار نمی‌رود. «بازدیدکننده‌ی یکتا» هر دستگاه را در هر روز یک‌بار می‌شمارد. ربات‌های جستجو و بررسی‌های خودکار سرور شمرده نمی‌شوند. داده‌های بیش از ۴۰۰ روز خودکار پاک می‌شوند.</p>
+</main>
+
+<script>
+(function () {
+  var fa = new Intl.NumberFormat('fa-IR'), pct = new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 });
+  var jdate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long' });
+  var jfull = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long', year: 'numeric' });
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var day = function (iso) { return new Date(iso + 'T12:00:00'); };
+  var SECTIONS = { portal: 'سامانه‌ها', about: 'درباره ما', infra: 'زیرساخت', gallery: 'گالری', products: 'حوزه فعالیت', services: 'خدمات',
+    process: 'فرآیند همکاری', brands: 'برندهای همکار', partner: 'همکاری', contact: 'تماس با ما', 'contact-ardabil': 'تماس — شعبه اردبیل' };
+  var SYSTEMS = { bime: 'بیمه و حواله', 'ras-chek': 'رأس‌گیری چک‌ها', tohfe: 'گزارش فروش تحفه', inventory: 'کنترل موجودی' };
+  var days = 30;
+  try { days = +localStorage.getItem('tkb-stats-days') || 30; } catch (e) {}
+
+  function delta(el, k) {
+    if (!k.prev) { el.textContent = k.now ? 'دوره‌ی قبل: بدون داده' : ''; el.className = ''; return; }
+    var d = (k.now - k.prev) / k.prev * 100;
+    el.textContent = (d >= 0 ? '▲ ' : '▼ ') + pct.format(Math.abs(d)) + '٪ نسبت به دوره‌ی قبل';
+    el.className = d >= 0 ? 'up' : 'down';
+  }
+  function bars(el, rows, opts) {
+    opts = opts || {};
+    if (!rows.length) { el.innerHTML = '<div class="empty">هنوز داده‌ای ثبت نشده است</div>'; return; }
+    var max = opts.base || Math.max.apply(null, rows.map(function (r) { return r[1]; }));
+    el.innerHTML = rows.map(function (r) {
+      var w = max ? Math.max(2, r[1] / max * 100) : 0;
+      var val = opts.base ? pct.format(Math.min(100, r[1] / opts.base * 100)) + '٪' : fa.format(r[1]);
+      return '<div class="bar"><span title="' + esc(r[0]) + '">' + esc(r[0]) + '</span><span class="track"><span class="fill" style="width:' + Math.min(100, w) + '%"></span></span><b>' + val + '</b></div>';
+    }).join('');
+  }
+  function stack(barEl, keysEl, parts) {
+    var total = parts.reduce(function (t, p) { return t + p[1]; }, 0);
+    if (!total) { barEl.innerHTML = ''; keysEl.innerHTML = '<div class="empty">هنوز داده‌ای ثبت نشده است</div>'; return; }
+    barEl.innerHTML = parts.filter(function (p) { return p[1]; }).map(function (p) { return '<span style="width:' + (p[1] / total * 100) + '%;background:' + p[2] + '" title="' + esc(p[0]) + '"></span>'; }).join('');
+    keysEl.innerHTML = parts.map(function (p) {
+      return '<div><span><i style="background:' + p[2] + '"></i>' + esc(p[0]) + '</span><b>' + fa.format(p[1]) + ' <small style="color:#8b8486">(' + pct.format(p[1] / total * 100) + '٪)</small></b></div>';
+    }).join('');
+  }
+  function trend(rows) {
+    var svg = $('trend'), W = svg.clientWidth || 900, H = svg.clientHeight || 240, L = 34, R = 8, T = 10, B = 26;
+    var max = Math.max(4, Math.max.apply(null, rows.map(function (r) { return Math.max(r.site, r.visitors, r.inquiries); })));
+    var step = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / step) * step;
+    var x = function (i) { return W - R - (i + .5) * (W - L - R) / rows.length; };   // راست‌به‌چپ: قدیمی‌ترین روز سمت راست
+    var y = function (v) { return T + (1 - v / top) * (H - T - B); };
+    var bw = Math.max(2, (W - L - R) / rows.length * .62), out = '';
+    for (var g = 0; g <= 4; g++) {
+      var v = top * g / 4;
+      out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#efe7e1"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + fa.format(v) + '</text>';
+    }
+    rows.forEach(function (r, i) {
+      out += '<rect x="' + (x(i) - bw / 2) + '" y="' + y(r.site) + '" width="' + bw + '" height="' + (H - B - y(r.site)) + '" rx="2" fill="#cf1725" opacity=".85"><title>' +
+        jdate.format(day(r.day)) + '\nبازدید: ' + fa.format(r.site) + '\nیکتا: ' + fa.format(r.visitors) + '\nاستعلام: ' + fa.format(r.inquiries) + '</title></rect>';
+    });
+    var line = function (key, color) {
+      return '<polyline fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linejoin="round" points="' + rows.map(function (r, i) { return x(i) + ',' + y(r[key]); }).join(' ') + '"/>';
+    };
+    out += line('visitors', '#23242a') + line('inquiries', '#e9a23b');
+    var every = Math.ceil(rows.length / (W < 560 ? 4 : 8));
+    rows.forEach(function (r, i) { if (i % every === 0) out += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle">' + jdate.format(day(r.day)) + '</text>'; });
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = out;
+  }
+
+  function render(d) {
+    $('range').textContent = 'از ' + jfull.format(day(d.from)) + ' تا ' + jfull.format(day(d.to));
+    var k = d.kpi;
+    $('k-views').textContent = fa.format(k.site_views.now); delta($('d-views'), k.site_views);
+    $('k-visitors').textContent = fa.format(k.site_visitors.now); delta($('d-visitors'), k.site_visitors);
+    $('k-inq').textContent = fa.format(k.inquiries.now); delta($('d-inq'), k.inquiries);
+    $('k-sys').textContent = fa.format(k.systems.now); delta($('d-sys'), k.systems);
+    trend(d.daily);
+    var views = k.site_views.now;
+    bars($('sections'), d.sections.map(function (r) { return [SECTIONS[r[0]] || r[0], r[1]]; }), { base: views || 1 });
+    bars($('brands'), d.brands);
+    bars($('sources'), d.sources);
+    bars($('systems'), d.systems.map(function (r) { return [SYSTEMS[r[0]] || r[0], r[1]]; }));
+    stack($('devBar'), $('devKeys'), [['گوشی', d.devices.mobile || 0, '#cf1725'], ['کامپیوتر', d.devices.desktop || 0, '#23242a']]);
+    var ir = d.inquiry_results;
+    stack($('inqBar'), $('inqKeys'), [['ثبت‌شده', ir.registered || 0, '#087c5f'], ['ثبت‌نشده', ir.not_registered || 0, '#e9a23b'],
+      ['نامشخص (پیام بانک)', ir.unknown || 0, '#8b8486'], ['خطا یا قطع ارتباط', ir.error || 0, '#b4342d']]);
+    $('inqSub').textContent = k.inquiries.now ? fa.format(k.inquiries_ok.now) + ' استعلام با نتیجه‌ی قطعی از ' + fa.format(k.inquiries.now) : 'هنوز استعلامی ثبت نشده است';
+    $('pv').textContent = fa.format(k.pichak_views.now); $('apps').textContent = fa.format(k.app_opens.now); $('installs').textContent = fa.format(k.installs.now);
+    var hmax = Math.max.apply(null, d.hours), peakAt = d.hours.indexOf(hmax);
+    $('hours').innerHTML = d.hours.map(function (n, h) {
+      return '<span class="' + (n && n === hmax ? 'peak' : '') + '" style="height:' + (hmax ? Math.max(2, n / hmax * 100) : 2) + '%" title="ساعت ' + fa.format(h) + ': ' + fa.format(n) + '"></span>';
+    }).join('');
+    $('peak').textContent = hmax ? 'بیشترین فعالیت: ساعت ' + fa.format(peakAt) + ' تا ' + fa.format(peakAt + 1) : 'هنوز داده‌ای ثبت نشده است';
+  }
+
+  var last = null;
+  function load() {
+    fetch('/stats/api.json?days=' + days, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { last = d; $('err').hidden = true; render(d); })
+      .catch(function () { $('err').hidden = false; $('err').textContent = 'دریافت آمار از سرور انجام نشد؛ چند لحظه بعد دوباره تلاش کنید.'; });
+  }
+  document.querySelectorAll('.period button').forEach(function (b) {
+    b.setAttribute('aria-pressed', +b.getAttribute('data-days') === days);
+    b.addEventListener('click', function () {
+      days = +b.getAttribute('data-days');
+      try { localStorage.setItem('tkb-stats-days', days); } catch (e) {}
+      document.querySelectorAll('.period button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      load();
+    });
+  });
+  var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (last) trend(last.daily); }, 150); });
+  load();
+  setInterval(load, 60000);
+})();
+</script>
+<script src="/assets/js/systems.js"></script>
+</body>
+</html>

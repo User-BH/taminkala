@@ -31,7 +31,7 @@ mkdir -p "$STAGE/pichak"
 cp -r "$REPO/pichak/static" "$STAGE/pichak/"
 cp "$REPO"/pichak/{app.py,captcha_inline.py,index.html,logo.png} "$STAGE/pichak/"
 cp "$REPO"/pichak-ocr/{captcha_math_ocr.py,captcha_templates.py} "$STAGE/pichak/"     # latest OCR engine
-cp "$REPO/windows/server.py" "$STAGE/"
+cp "$REPO/windows/server.py" "$REPO/windows/stats.py" "$STAGE/"
 cp "$REPO"/windows/*.bat "$STAGE/"
 cp -r "$REPO/windows/tools" "$STAGE/"
 cp "$REPO/windows/README-FA.html" "$STAGE/راهنما.html"

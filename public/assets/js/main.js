@@ -145,6 +145,21 @@
     later(function () { if (panoImg.complete) panoLayout(); else panoImg.addEventListener('load', panoLayout); });
   }
 
+  /* ---------- آمار: کدام بخش‌ها دیده شده‌اند و کدام برندها باز شده‌اند (روی سرور شرکت؛ بدون کوکی) ---------- */
+  var track = function (k, t) {
+    try { if (navigator.sendBeacon) navigator.sendBeacon('/__s', new Blob([JSON.stringify({ k: k, t: t })], { type: 'application/json' })); } catch (e) {}
+  };
+  if ('IntersectionObserver' in window) {
+    var seenSec = {};
+    var secIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        var id = en.target.id;
+        if (en.isIntersecting && !seenSec[id]) { seenSec[id] = 1; track('section', id); secIO.unobserve(en.target); }
+      });
+    }, { threshold: 0.35 });
+    document.querySelectorAll('main section[id]:not(#home)').forEach(function (sec) { secIO.observe(sec); });
+  }
+
   /* ---------- برندها: فیلتر دسته‌بندی، ردیف‌های تمام‌عرض و پنجره‌ی برند ---------- */
   var grid = document.getElementById('brandGrid');
   if (grid) {
@@ -210,6 +225,7 @@
       grid.addEventListener('click', function (e) {
         var el = e.target.closest('.bs-item'); if (!el) return;
         show(visible.indexOf(el)); pop.showModal();
+        track('brand', el.querySelector('b').textContent);
       });
       pop.querySelector('.bp-close').addEventListener('click', function () { pop.close(); });
       pop.querySelector('.bp-prev').addEventListener('click', function () { show(at - 1); });
@@ -268,7 +284,7 @@
     if (focus) tab.focus();
   };
   brTabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { pickBranch(t); });
+    t.addEventListener('click', function () { pickBranch(t); if (i) track('section', 'contact-' + t.id.replace('tab-', '')); });
     t.addEventListener('keydown', function (e) {   // جهت‌نماها بین زبانه‌ها (راست‌به‌چپ)
       var d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
       if (d) { e.preventDefault(); pickBranch(brTabs[(i + d + brTabs.length) % brTabs.length], true); }
