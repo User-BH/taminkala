@@ -253,6 +253,28 @@
     });
   }
 
+  /* ---------- شعبه‌ها: زبانه‌ی تبریز / اردبیل؛ نشانی، تلفن و نقشه‌ی همان شعبه ---------- */
+  var brTabs = Array.prototype.slice.call(document.querySelectorAll('.branch-tabs [role="tab"]')), brMap = document.getElementById('branchMap');
+  var pickBranch = function (tab, focus) {
+    brTabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (brMap && brMap.getAttribute('src') !== tab.getAttribute('data-map')) {
+      brMap.src = tab.getAttribute('data-map');
+      brMap.title = 'موقعیت شعبه‌ی ' + tab.firstChild.textContent.trim() + ' تأمین کالا باختر روی نقشه نشان';
+    }
+    if (focus) tab.focus();
+  };
+  brTabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { pickBranch(t); });
+    t.addEventListener('keydown', function (e) {   // جهت‌نماها بین زبانه‌ها (راست‌به‌چپ)
+      var d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
+      if (d) { e.preventDefault(); pickBranch(brTabs[(i + d + brTabs.length) % brTabs.length], true); }
+    });
+  });
+
   /* ---------- وضعیت باز/بسته بودن شرکت (به وقت تهران: شنبه تا پنجشنبه ۷ تا ۱۷) ---------- */
   var openEl = document.getElementById('openState');
   if (openEl) try {

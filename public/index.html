@@ -59,7 +59,22 @@
     },
     "geo": { "@type": "GeoCoordinates", "latitude": 37.9964249, "longitude": 46.0773137 },
     "hasMap": "https://neshan.org/maps/places/422b7ea3f6029f3ecad0772734579803",
-    "areaServed": "آذربایجان شرقی",
+    "areaServed": ["آذربایجان شرقی", "اردبیل"],
+    "department": [{
+      "@type": "WholesaleStore",
+      "name": "تأمین کالا باختر — شعبه اردبیل",
+      "telephone": ["+98-45-33644008", "+98-45-33644009"],
+      "email": "sherkatepakhsh@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "میدان ایثار، شهرک صنعتی شماره ۱، انتهای شمشاد ۴",
+        "addressLocality": "اردبیل",
+        "addressRegion": "اردبیل",
+        "addressCountry": "IR"
+      },
+      "geo": { "@type": "GeoCoordinates", "latitude": 38.2213226, "longitude": 48.3245256 },
+      "hasMap": "https://neshan.org/maps/places/9be3665ca7c565684b888bbb485b2d32"
+    }],
     "openingHoursSpecification": [{
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
@@ -570,23 +585,41 @@
     <div class="contact-box reveal">
       <div class="contact-panel">
         <div class="cp-head">
-          <h3>دفتر مرکزی و انبار</h3>
+          <h3>شعبه‌های ما</h3>
           <span class="open-state" id="openState" hidden></span>
         </div>
-        <ul class="cp-list">
-          <li><span class="fi"><svg class="i"><use href="#i-pin"/></svg></span><span><small>نشانی</small>تبریز، جاده آذرشهر، بعد از نیروگاه حرارتی، کوی ماندگار، شهرک صنعتی غرب</span></li>
-          <li><span class="fi"><svg class="i"><use href="#i-phone"/></svg></span><span><small>تلفن</small><a href="tel:+984132459071" class="ltr">۰۴۱ - ۳۲۴۵۹۰۷۱</a></span></li>
-          <li><span class="fi"><svg class="i"><use href="#i-mail"/></svg></span><span><small>ایمیل</small><a href="mailto:sherkatepakhsh@gmail.com">sherkatepakhsh@gmail.com</a></span></li>
-          <li><span class="fi"><svg class="i"><use href="#i-clock"/></svg></span><span><small>ساعات کاری</small>شنبه تا پنجشنبه، ساعت ۷ تا ۱۷</span></li>
-        </ul>
-        <div class="cp-actions">
-          <a class="btn btn-primary" href="tel:+984132459071"><svg class="i"><use href="#i-phone"/></svg> تماس تلفنی</a>
-          <a class="btn btn-ghost" href="https://neshan.org/maps/places/422b7ea3f6029f3ecad0772734579803" target="_blank" rel="noopener"><svg class="i"><use href="#i-pin"/></svg> مسیریابی با نشان</a>
+        <div class="branch-tabs" role="tablist" aria-label="انتخاب شعبه">
+          <button type="button" role="tab" id="tab-tabriz" aria-controls="br-tabriz" aria-selected="true" data-map="https://neshan.org/maps/iframe/places/422b7ea3f6029f3ecad0772734579803#c37.996-46.083-15z-0p/37.9964249195137/46.07731368526348">تبریز <small>دفتر مرکزی</small></button>
+          <button type="button" role="tab" id="tab-ardabil" aria-controls="br-ardabil" aria-selected="false" tabindex="-1" data-map="https://neshan.org/maps/iframe/places/9be3665ca7c565684b888bbb485b2d32#c38.221-48.325-16z-0p/38.22132257999999/48.32452558">اردبیل</button>
         </div>
+        <div class="branch" id="br-tabriz" role="tabpanel" aria-labelledby="tab-tabriz">
+          <ul class="cp-list">
+            <li><span class="fi"><svg class="i"><use href="#i-pin"/></svg></span><span><small>نشانی دفتر مرکزی و انبار</small>تبریز، جاده آذرشهر، بعد از نیروگاه حرارتی، کوی ماندگار، شهرک صنعتی غرب</span></li>
+            <li><span class="fi"><svg class="i"><use href="#i-phone"/></svg></span><span><small>تلفن</small><a href="tel:+984132459071" class="ltr">۰۴۱ - ۳۲۴۵۹۰۷۱</a></span></li>
+          </ul>
+          <div class="cp-actions">
+            <a class="btn btn-primary" href="tel:+984132459071"><svg class="i"><use href="#i-phone"/></svg> تماس با تبریز</a>
+            <a class="btn btn-ghost" href="https://neshan.org/maps/places/422b7ea3f6029f3ecad0772734579803" target="_blank" rel="noopener"><svg class="i"><use href="#i-pin"/></svg> مسیریابی با نشان</a>
+          </div>
+        </div>
+        <div class="branch" id="br-ardabil" role="tabpanel" aria-labelledby="tab-ardabil" hidden>
+          <ul class="cp-list">
+            <li><span class="fi"><svg class="i"><use href="#i-pin"/></svg></span><span><small>نشانی شعبه اردبیل</small>اردبیل، میدان ایثار، شهرک صنعتی شماره ۱، انتهای شمشاد ۴</span></li>
+            <li><span class="fi"><svg class="i"><use href="#i-phone"/></svg></span><span><small>تلفن</small><a href="tel:+984533644008" class="ltr">۰۴۵ - ۳۳۶۴۴۰۰۸</a> · <a href="tel:+984533644009" class="ltr">۰۴۵ - ۳۳۶۴۴۰۰۹</a></span></li>
+          </ul>
+          <div class="cp-actions">
+            <a class="btn btn-primary" href="tel:+984533644008"><svg class="i"><use href="#i-phone"/></svg> تماس با اردبیل</a>
+            <a class="btn btn-ghost" href="https://neshan.org/maps/places/9be3665ca7c565684b888bbb485b2d32" target="_blank" rel="noopener"><svg class="i"><use href="#i-pin"/></svg> مسیریابی با نشان</a>
+          </div>
+        </div>
+        <ul class="cp-list cp-common">
+          <li><span class="fi"><svg class="i"><use href="#i-mail"/></svg></span><span><small>ایمیل</small><a href="mailto:sherkatepakhsh@gmail.com">sherkatepakhsh@gmail.com</a></span></li>
+          <li><span class="fi"><svg class="i"><use href="#i-clock"/></svg></span><span><small>ساعات کاری هر دو شعبه</small>شنبه تا پنجشنبه، ساعت ۷ تا ۱۷</span></li>
+        </ul>
       </div>
       <div class="map">
         <span class="map-wait"><svg class="i"><use href="#i-pin"/></svg>نقشه در حال بارگذاری…</span>
-        <iframe title="موقعیت تأمین کالا باختر روی نقشه نشان" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
+        <iframe id="branchMap" title="موقعیت شعبه‌ی تبریز تأمین کالا باختر روی نقشه نشان" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
           src="https://neshan.org/maps/iframe/places/422b7ea3f6029f3ecad0772734579803#c37.996-46.083-15z-0p/37.9964249195137/46.07731368526348"></iframe>
       </div>
     </div>
@@ -632,7 +665,8 @@
         <ul class="footer-contact">
           <li><svg class="i"><use href="#i-phone"/></svg><a href="tel:+984132459071" class="ltr">۰۴۱ - ۳۲۴۵۹۰۷۱</a></li>
           <li><svg class="i"><use href="#i-mail"/></svg><a href="mailto:sherkatepakhsh@gmail.com">sherkatepakhsh@gmail.com</a></li>
-          <li><svg class="i"><use href="#i-pin"/></svg><span>تبریز، جاده آذرشهر، بعد از نیروگاه حرارتی، کوی ماندگار، شهرک صنعتی غرب</span></li>
+          <li><svg class="i"><use href="#i-pin"/></svg><span><b>تبریز:</b> جاده آذرشهر، بعد از نیروگاه حرارتی، کوی ماندگار، شهرک صنعتی غرب</span></li>
+          <li><svg class="i"><use href="#i-pin"/></svg><span><b>اردبیل:</b> میدان ایثار، شهرک صنعتی شماره ۱، انتهای شمشاد ۴ — <a href="tel:+984533644008" class="ltr">۰۴۵ - ۳۳۶۴۴۰۰۸</a></span></li>
         </ul>
       </div>
       <div>
