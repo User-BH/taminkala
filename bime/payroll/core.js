@@ -15,9 +15,6 @@ function compute(p,r){
  const fromSurplus=rate?Math.min(25-fromCommission,Math.floor(pool/rate)):0;
  const plannedDays=fromCommission+fromSurplus, plannedCommission=net-fromCommission*rate;
  const plannedRest=pool-fromSurplus*rate, plannedMinutes=minuteRate?Math.floor(plannedRest/minuteRate):0;
- // Only documented work is reported. Allocation is capped at documented days/minutes and the available budget.
-
- const paidDays=Math.min(actualDays,plannedDays), paidFromCommission=Math.min(paidDays,fromCommission), paidFromSurplus=paidDays-paidFromCommission;
  const commission=plannedCommission, rest=plannedRest;
  const allocatedMinutes=plannedMinutes;
  const unallocated=rest-allocatedMinutes*minuteRate;
