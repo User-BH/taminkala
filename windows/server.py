@@ -257,7 +257,7 @@ def pichak_app(cfg, log, stats):
 
 
 # ---------------------------------------------------------------- dispatch
-INTERNAL_SYSTEMS = {"/": "bime", "/index.html": "bime", "/ras-chek/": "ras-chek", "/tohfe/": "tohfe", "/inventory/": "inventory"}
+INTERNAL_SYSTEMS = {"/": "bime", "/index.html": "bime", "/ras-chek/": "ras-chek", "/tohfe/": "tohfe", "/inventory/": "inventory", "/payroll/": "payroll"}
 
 
 def build(cfg, log):
