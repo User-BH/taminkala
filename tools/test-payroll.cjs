@@ -1,0 +1,10 @@
+const assert=require("node:assert/strict"),P=require("../bime/payroll/core.js");
+const p={id:3,code:"1003",name:"نمونه",job:"بازاریاب",wage:8212350,seniority:1384264};
+let r={...P.empty(),commission:"۶۲۳٬۷۹۵٬۰۰۰"};
+let c=P.compute(p,r);assert.equal(c.factor,2);assert.equal(c.plannedDays,25);assert.equal(c.commission,143964300);assert.equal(c.rate,19193228);
+assert.equal(P.compute(p,{...r,factor:0}).factor,2);
+let row=P.exportRow(p,r,c);assert.equal(row.length,29);assert.equal(row[27],25);assert.equal(row[1],143964300);
+let a={...p,job:"اداری",wage:5541850,seniority:0};let x={...P.empty(),fixed:20000000,commission:100};let y=P.compute(a,x);assert.equal(y.plannedDays,3);assert.equal(y.commission,100);assert.equal(y.minuteRate,17633);assert.equal(y.plannedMinutes,191);
+assert.equal(P.compute(a,{...x,reserve:101}).errors.length,1);
+const copied=P.copyMonth({3:{...r,fixed:500,work:30}},[p],["fixed","work"]);assert.equal(copied[3].fixed,500);assert.equal(copied[3].work,30);assert.equal(copied[3].commission,0);
+console.log("payroll tests passed");
